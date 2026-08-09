@@ -1,0 +1,92 @@
+services:
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      HOSTNAME: ${HOSTNAME:-localhost}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - django
+      - keycloak
+
+  django:
+    build:
+      context: ../django-sar-portal
+    restart: unless-stopped
+    environment:
+      HOSTNAME: ${HOSTNAME:-localhost}
+      ENGINEER_ID: ${ENGINEER_ID:-demo}
+      AWS_REGION: ${AWS_REGION:-eu-west-2}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      KEYCLOAK_BASE_URL: https://${HOSTNAME:-localhost}/auth
+      OIDC_RP_CLIENT_ID: sar-portal
+      OIDC_RP_CLIENT_SECRET: ${OIDC_RP_CLIENT_SECRET:?set OIDC_RP_CLIENT_SECRET}
+      SAR_API_MODE: ${SAR_API_MODE:-mock}
+      SAR_API_AUTH_ENABLED: ${SAR_API_AUTH_ENABLED:-false}
+      SAR_API_BASE_URL: ${SAR_API_BASE_URL:-}
+      CONTRACTS_DIR: /contracts
+    volumes:
+      - ../../../contracts:/contracts:ro
+      - django_data:/app/data
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.1
+    restart: unless-stopped
+    command:
+      - start
+      - --import-realm
+      - --http-enabled=true
+      - --hostname-strict=false
+      - --proxy-headers=xforwarded
+      - --health-enabled=true
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME_URL: https://${HOSTNAME:-localhost}/auth
+      KC_HOSTNAME_ADMIN_URL: https://${HOSTNAME:-localhost}/auth
+      # Overwrite the realm client secret to match Django
+      KEYCLOAK_CLIENT_SECRET: ${OIDC_RP_CLIENT_SECRET:?set OIDC_RP_CLIENT_SECRET}
+    volumes:
+      - ../keycloak/realm-sar-sandbox.json:/realm/realm-sar-sandbox.json:ro
+      - ./keycloak/entrypoint-wrapper.sh:/opt/keycloak/entrypoint-wrapper.sh:ro
+    entrypoint: ["/bin/bash", "/opt/keycloak/entrypoint-wrapper.sh"]
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
+  keycloak-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  caddy_data:
+  caddy_config:
+  django_data:
+  keycloak_pg:

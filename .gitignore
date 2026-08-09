@@ -1,0 +1,65 @@
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.auto.tfvars
+!example.tfvars
+.terraformrc
+terraform.rc
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+staticfiles/
+media/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Tooling
+.tflint.d/
+.checkov/
+.pre-commit-cache/
+
+# Generated archives (deploy artifacts are built locally)
+*.tar.gz
+!seed-data/out/**/*.tar.gz
+
+# Node (if any tooling added later)
+node_modules/

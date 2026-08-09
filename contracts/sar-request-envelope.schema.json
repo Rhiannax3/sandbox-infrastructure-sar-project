@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sar-sandbox.local/contracts/sar-request-envelope.schema.json",
+  "title": "SAR Request Envelope",
+  "description": "Shared envelope for all Subject Access Request payloads submitted via the compliance portal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "document_type",
+    "subject",
+    "requestor",
+    "priority",
+    "status",
+    "created_at",
+    "payload"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the SAR request"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "user_profile_summary",
+        "user_activity_report",
+        "user_consent_log"
+      ],
+      "description": "Determines which payload schema applies"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_id", "email"],
+      "properties": {
+        "subject_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Internal identifier of the data subject"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "display_name": {
+          "type": "string"
+        }
+      }
+    },
+    "requestor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["officer_id", "email"],
+      "properties": {
+        "officer_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["standard_officer", "senior_officer"]
+        }
+      }
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "in_progress",
+        "pending_approval",
+        "fulfilled",
+        "rejected",
+        "cancelled"
+      ]
+    },
+    "sla_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 90,
+      "default": 30
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "payload": {
+      "type": "object",
+      "description": "Document-type-specific payload; validate against the matching schema"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "document_type": { "const": "user_profile_summary" }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "user-profile-summary.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "document_type": { "const": "user_activity_report" }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "user-activity-report.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "document_type": { "const": "user_consent_log" }
+        }
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "user-consent-log.schema.json"
+          }
+        }
+      }
+    }
+  ]
+}

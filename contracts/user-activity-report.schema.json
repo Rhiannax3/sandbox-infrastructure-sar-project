@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sar-sandbox.local/contracts/user-activity-report.schema.json",
+  "title": "User Activity Report",
+  "description": "Payload for a User Activity Report SAR document request.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["date_from", "date_to", "activity_categories"],
+  "properties": {
+    "date_from": {
+      "type": "string",
+      "format": "date",
+      "description": "Inclusive start of the activity window"
+    },
+    "date_to": {
+      "type": "string",
+      "format": "date",
+      "description": "Inclusive end of the activity window"
+    },
+    "activity_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "login",
+          "logout",
+          "data_access",
+          "data_export",
+          "preference_change",
+          "password_reset",
+          "consent_change"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "include_ip_addresses": {
+      "type": "boolean",
+      "default": false
+    },
+    "include_device_info": {
+      "type": "boolean",
+      "default": false
+    },
+    "aggregation": {
+      "type": "string",
+      "enum": ["raw", "daily", "weekly"],
+      "default": "raw"
+    }
+  }
+}

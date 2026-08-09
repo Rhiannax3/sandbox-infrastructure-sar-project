@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}New request — SAR Portal{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>Choose document type</h1>
+  <ul>
+    {% for value, label in choices %}
+      <li><a href="?document_type={{ value }}">{{ label }}</a> <code class="muted">{{ value }}</code></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

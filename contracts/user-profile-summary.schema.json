@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sar-sandbox.local/contracts/user-profile-summary.schema.json",
+  "title": "User Profile Summary",
+  "description": "Payload for a User Profile Summary SAR document request.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "include_contact_details",
+    "include_employment_history",
+    "include_preferences"
+  ],
+  "properties": {
+    "include_contact_details": {
+      "type": "boolean",
+      "description": "Include email, phone, and postal address"
+    },
+    "include_employment_history": {
+      "type": "boolean",
+      "description": "Include current and prior employment records"
+    },
+    "include_preferences": {
+      "type": "boolean",
+      "description": "Include marketing and accessibility preferences"
+    },
+    "as_of_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Point-in-time for the profile snapshot (defaults to request date)"
+    },
+    "fields_of_interest": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "identity",
+          "contact",
+          "employment",
+          "preferences",
+          "security_settings"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  }
+}

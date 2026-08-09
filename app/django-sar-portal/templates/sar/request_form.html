@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Create {{ document_type }} — SAR Portal{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>New {{ document_type|cut:"_"|title }} request</h1>
+  <p class="muted">Fields are driven by <code>contracts/</code> JSON Schema. Your Lambda should validate the same contracts.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="document_type" value="{{ document_type }}">
+
+    <h2>Subject</h2>
+    <label for="subject_id">Subject ID</label>
+    <input id="subject_id" name="subject_id" required placeholder="SUBJ-12345">
+    <label for="subject_email">Subject email</label>
+    <input id="subject_email" name="subject_email" type="email" required placeholder="subject@example.com">
+    <label for="subject_display_name">Display name</label>
+    <input id="subject_display_name" name="subject_display_name">
+
+    <h2>Request metadata</h2>
+    <label for="priority">Priority</label>
+    <select id="priority" name="priority">
+      {% for value, label in priorities %}
+        <option value="{{ value }}" {% if value == "medium" %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label for="officer_id">Your officer ID</label>
+    <input id="officer_id" name="officer_id" value="OFF-001">
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="3"></textarea>
+
+    <h2>Document payload</h2>
+    {% for field in field_defs %}
+      {% if field.type == "boolean" %}
+        <div class="checkbox-row">
+          <input type="checkbox" id="{{ field.name }}" name="{{ field.name }}" {% if field.default %}checked{% endif %}>
+          <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
+        </div>
+      {% elif field.enum and not field.items %}
+        <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
+        <select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}>
+          {% for opt in field.enum %}
+            <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      {% elif field.items %}
+        <label>{{ field.title }}{% if field.required %} *{% endif %}</label>
+        {% for opt in field.items.enum %}
+          <div class="checkbox-row">
+            <input type="checkbox" id="{{ field.name }}_{{ opt }}" name="{{ field.name }}" value="{{ opt }}">
+            <label for="{{ field.name }}_{{ opt }}">{{ opt }}</label>
+          </div>
+        {% endfor %}
+      {% else %}
+        <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
+        <input id="{{ field.name }}" name="{{ field.name }}"
+               type="{% if field.format == 'date' %}date{% elif field.format == 'email' %}email{% else %}text{% endif %}"
+               {% if field.required %}required{% endif %}
+               placeholder="{{ field.description }}">
+      {% endif %}
+      {% if field.description %}<p class="muted" style="margin:0.15rem 0 0.5rem;font-size:0.8rem;">{{ field.description }}</p>{% endif %}
+    {% endfor %}
+
+    <button type="submit">Submit request</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,275 @@
+{
+  "id": "sar-sandbox",
+  "realm": "sar-sandbox",
+  "displayName": "SAR Compliance Sandbox",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "id": "role-standard-officer",
+        "name": "standard_officer",
+        "description": "Standard compliance officer — can create and manage own SAR requests",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "id": "role-senior-officer",
+        "name": "senior_officer",
+        "description": "Senior compliance officer — can approve SAR requests and use sar:approve scope",
+        "composite": true,
+        "composites": {
+          "realm": ["standard_officer"]
+        },
+        "clientRole": false
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "id": "scope-sar-read",
+      "name": "sar:read",
+      "description": "Read SAR requests",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "id": "mapper-sar-read-audience",
+          "name": "sar-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "sar-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scope-sar-write",
+      "name": "sar:write",
+      "description": "Create and update SAR requests",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "id": "mapper-sar-write-audience",
+          "name": "sar-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "sar-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scope-sar-approve",
+      "name": "sar:approve",
+      "description": "Approve SAR requests (senior officers only)",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "id": "mapper-sar-approve-audience",
+          "name": "sar-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "sar-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scope-roles",
+      "name": "roles",
+      "description": "OpenID Connect scope for realm roles",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "id": "mapper-realm-roles",
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "user.session.note": "",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "roles",
+    "profile",
+    "email"
+  ],
+  "defaultOptionalClientScopes": [
+    "sar:read",
+    "sar:write",
+    "sar:approve",
+    "offline_access"
+  ],
+  "clients": [
+    {
+      "id": "client-sar-portal",
+      "clientId": "sar-portal",
+      "name": "SAR Django Portal",
+      "description": "Confidential OIDC client for the Django compliance portal",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "CHANGE_ME_VIA_ENV",
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "https://*/oidc/callback/",
+        "http://localhost:8000/oidc/callback/"
+      ],
+      "webOrigins": ["+"],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["roles", "profile", "email", "sar:read", "sar:write"],
+      "optionalClientScopes": ["sar:approve", "offline_access"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://*/*##http://localhost:8000/*"
+      }
+    },
+    {
+      "id": "client-sar-api",
+      "clientId": "sar-api",
+      "name": "SAR API Audience",
+      "description": "Resource server / audience client for API Gateway JWT validation (Phase 3)",
+      "enabled": true,
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [],
+      "optionalClientScopes": [],
+      "attributes": {
+        "access.token.lifespan": "300"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "user-standard-officer",
+      "username": "officer.standard",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Sam",
+      "lastName": "Standard",
+      "email": "officer.standard@sar-sandbox.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Password123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["standard_officer", "default-roles-sar-sandbox"],
+      "clientRoles": {},
+      "groups": [],
+      "attributes": {
+        "officer_id": ["OFF-001"]
+      }
+    },
+    {
+      "id": "user-senior-officer",
+      "username": "officer.senior",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Alex",
+      "lastName": "Senior",
+      "email": "officer.senior@sar-sandbox.local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Password123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["senior_officer", "standard_officer", "default-roles-sar-sandbox"],
+      "clientRoles": {},
+      "groups": [],
+      "attributes": {
+        "officer_id": ["OFF-002"]
+      }
+    }
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "sar:approve",
+      "roles": ["senior_officer"]
+    }
+  ],
+  "browserSecurityHeaders": {
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "referrerPolicy": "no-referrer",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  }
+}

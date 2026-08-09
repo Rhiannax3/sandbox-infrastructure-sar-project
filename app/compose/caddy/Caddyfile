@@ -1,0 +1,9 @@
+{$HOSTNAME:localhost} {
+  encode gzip
+
+  # Keycloak serves with KC_HTTP_RELATIVE_PATH=/auth
+  reverse_proxy /auth/* keycloak:8080
+
+  # Django portal (everything else)
+  reverse_proxy django:8000
+}

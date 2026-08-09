@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Home — SAR Portal{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>Subject Access Request portal</h1>
+  <p class="muted">
+    Boilerplate frontend for Project A. Wire your API Gateway URL into SSM
+    (<code>/sar-sandbox/{{ engineer_id }}/api-base-url</code>) and set
+    <code>SAR_API_MODE=live</code> after Phase 1.
+  </p>
+  {% if health %}
+    <p><strong>API health:</strong> {{ health.message|default:health.status }} <span class="badge">{{ health.mode|default:sar_api_mode }}</span></p>
+  {% elif health_error %}
+    <p class="messages"><span class="error" style="display:inline-block;padding:0.5rem 0.75rem;border-radius:8px;background:#7f1d1d;">{{ health_error }}</span></p>
+  {% endif %}
+  {% if user.is_authenticated %}
+    <a class="btn" href="{% url 'request_create' %}">Create SAR request</a>
+    <a class="btn secondary" href="{% url 'request_list' %}">View requests</a>
+  {% else %}
+    <a class="btn" href="{% url 'oidc_authentication_init' %}">Login to continue</a>
+  {% endif %}
+</div>
+<div class="panel">
+  <h2>Document types</h2>
+  <ul>
+    {% for dt in document_types %}
+      <li><code>{{ dt }}</code></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

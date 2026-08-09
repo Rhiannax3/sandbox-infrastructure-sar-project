@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Request {{ item.request_id }} — SAR Portal{% endblock %}
+{% block content %}
+<div class="panel">
+  <h1>Request detail</h1>
+  <p>
+    <span class="badge">{{ item.status }}</span>
+    <span class="badge">{{ item.document_type }}</span>
+    <span class="badge">{{ item.priority }}</span>
+  </p>
+  <pre>{{ item_json }}</pre>
+  <form method="post" action="{% url 'request_delete' item.request_id %}" onsubmit="return confirm('Delete this request?');">
+    {% csrf_token %}
+    <button type="submit" class="btn danger">Delete</button>
+    <a class="btn secondary" href="{% url 'request_list' %}">Back</a>
+  </form>
+</div>
+{% endblock %}
