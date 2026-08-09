@@ -23,6 +23,10 @@ The portal client secret is set at deploy time from SSM / Compose env (`OIDC_RP_
 | `officer.standard` | standard_officer | OFF-001 |
 | `officer.senior` | senior_officer | OFF-002 |
 
+Use these via the **Django portal** login (OIDC against realm `sar-sandbox`). They will not work on the Keycloak admin console (`/auth/admin/`), which is realm `master`.
+
+Realm import may not apply plaintext passwords reliably on every Keycloak version; if login fails with a correct username, reset with `kcadm.sh set-password` (mentor) or re-run the host ensure step documented in the platform-admin runbook.
+
 ## Scopes
 
 - `sar:read` — list/get requests

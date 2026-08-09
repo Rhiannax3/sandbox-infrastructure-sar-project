@@ -3,15 +3,26 @@
 {% block content %}
 <div class="panel">
   <h1>Subject Access Request portal</h1>
-  <p class="muted">
-    Boilerplate frontend for Project A. Wire your API Gateway URL into SSM
-    (<code>/sar-sandbox/{{ engineer_id }}/api-base-url</code>) and set
-    <code>SAR_API_MODE=live</code> after Phase 1.
-  </p>
+  {% if sar_api_mode == "live" %}
+    <p class="muted">
+      Portal is in <strong>live</strong> mode — health and CRUD call the API base URL
+      from SSM <code>/sar-sandbox/{{ engineer_id }}/api-base-url</code>.
+    </p>
+  {% else %}
+    <p class="muted">
+      Portal is in <strong>mock</strong> mode. After Phase 1, publish your API Gateway
+      base URL to SSM (<code>/sar-sandbox/{{ engineer_id }}/api-base-url</code>) and ask
+      your mentor to set <code>SAR_API_MODE=live</code> on the sandbox host.
+    </p>
+  {% endif %}
   {% if health %}
-    <p><strong>API health:</strong> {{ health.message|default:health.status }} <span class="badge">{{ health.mode|default:sar_api_mode }}</span></p>
+    <p><strong>API health:</strong> {{ health.message|default:health.status }} <span class="badge {{ sar_api_mode }}">{{ health.mode|default:sar_api_mode }}</span></p>
   {% elif health_error %}
-    <p class="messages"><span class="error" style="display:inline-block;padding:0.5rem 0.75rem;border-radius:8px;background:#7f1d1d;">{{ health_error }}</span></p>
+    <p><strong>API health:</strong>
+      <span class="error" style="display:inline-block;padding:0.5rem 0.75rem;border-radius:8px;background:#7f1d1d;">{{ health_error }}</span>
+    </p>
+  {% else %}
+    <p class="muted"><strong>API health:</strong> (no response)</p>
   {% endif %}
   {% if user.is_authenticated %}
     <a class="btn" href="{% url 'request_create' %}">Create SAR request</a>

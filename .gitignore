@@ -59,6 +59,9 @@ Thumbs.db
 .checkov/
 .pre-commit-cache/
 
+# Local Terraform plan/apply/output records (written by Make targets)
+/records/
+
 # Generated archives (deploy artifacts are built locally)
 *.tar.gz
 !seed-data/out/**/*.tar.gz

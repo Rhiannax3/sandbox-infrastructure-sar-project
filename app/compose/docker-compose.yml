@@ -53,6 +53,7 @@ services:
       - --proxy-headers=xforwarded
       - --health-enabled=true
     environment:
+      HOSTNAME: ${HOSTNAME:-localhost}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: keycloak
@@ -62,7 +63,7 @@ services:
       KC_HTTP_RELATIVE_PATH: /auth
       KC_HOSTNAME_URL: https://${HOSTNAME:-localhost}/auth
       KC_HOSTNAME_ADMIN_URL: https://${HOSTNAME:-localhost}/auth
-      # Overwrite the realm client secret to match Django
+      # Overwrite the realm client secret / redirect URI to match Django + host
       KEYCLOAK_CLIENT_SECRET: ${OIDC_RP_CLIENT_SECRET:?set OIDC_RP_CLIENT_SECRET}
     volumes:
       - ../keycloak/realm-sar-sandbox.json:/realm/realm-sar-sandbox.json:ro
