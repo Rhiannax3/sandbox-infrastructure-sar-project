@@ -33,7 +33,9 @@ services:
       SAR_API_BASE_URL: ${SAR_API_BASE_URL:-}
       CONTRACTS_DIR: /contracts
     volumes:
-      - ../../../contracts:/contracts:ro
+      # Default ../contracts suits the EC2 artifact layout. For local compose from
+      # this repo, set CONTRACTS_HOST_PATH=../../../contracts in app/compose/.env
+      - ${CONTRACTS_HOST_PATH:-../contracts}:/contracts:ro
       - django_data:/app/data
     command: >
       sh -c "python manage.py migrate --noinput &&

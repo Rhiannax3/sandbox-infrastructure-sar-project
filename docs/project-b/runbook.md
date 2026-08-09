@@ -2,6 +2,8 @@
 
 Databricks Medallion Data Lake & SAR Reporting sandbox.
 
+This track is **standalone** — you do not need an AWS / Project A sandbox. Landing data is pre-seeded from `seed-data/`.
+
 ## What is already built for you
 
 - ADLS Gen2 storage account with `landing`, `external`, `checkpoints` containers

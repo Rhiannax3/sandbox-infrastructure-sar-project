@@ -3,6 +3,7 @@
 **/*.tfstate
 **/*.tfstate.*
 **/*.tfplan
+**/terraform/project-a-aws/.build/
 crash.log
 crash.*.log
 override.tf
@@ -10,6 +11,7 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 *.auto.tfvars
+**/terraform.tfvars
 !example.tfvars
 .terraformrc
 terraform.rc

@@ -2,13 +2,15 @@
 
 AWS API & Document Request System sandbox.
 
+This track is **standalone** — you do not need Azure / Project B to complete the phases.
+
 ## What is already built for you
 
 - EC2 host running **Django SAR portal** + **Keycloak** (Docker Compose, TLS via nip.io)
 - IAM **Lambda execution role** you should attach to your functions
 - IAM **junior developer policy** (ask your mentor to attach it to your principal)
 - SSM parameter `/sar-sandbox/<you>/api-base-url` — publish your API Gateway URL here
-- S3 log archive bucket for CloudWatch exports (feeds Project B later)
+- S3 log archive bucket for CloudWatch exports (optional; not required for Project B)
 - JSON Schema contracts in `contracts/`
 
 ## What you must build (by phase)

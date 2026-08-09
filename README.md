@@ -4,13 +4,17 @@ Foundational Terraform and application code for the Junior Data Engineering Deve
 
 This repository provisions the **base infrastructure and boilerplate** that junior engineers build upon. It deliberately does **not** create the resources that are the learning objectives of each phase (Lambda, API Gateway, DynamoDB, medallion tables/pipelines, layer-level grants, Power BI dashboards).
 
+**Project A (AWS) and Project B (Azure) are independent.** Provision and run only the track you need.
+
 ## Who should read what
 
 | Role | Start here |
 |------|------------|
-| **Platform admin / senior architect** (you provision sandboxes) | **[Platform administrator runbook](docs/platform-admin/runbook.md)** — credentials, which files to edit, full deploy sequence |
-| Junior engineer (Project A) | [Project A runbook](docs/project-a/runbook.md) |
-| Junior engineer (Project B) | [Project B runbook](docs/project-b/runbook.md) |
+| **Platform admin** — Project A only | [Admin runbook §3 (AWS)](docs/platform-admin/runbook.md#3-project-a--aws-only) |
+| **Platform admin** — Project B only | [Admin runbook §4 (Azure)](docs/platform-admin/runbook.md#4-project-b--azure-only) |
+| **Platform admin** — full guide | [Platform administrator runbook](docs/platform-admin/runbook.md) |
+| Junior — Project A | [Project A runbook](docs/project-a/runbook.md) |
+| Junior — Project B | [Project B runbook](docs/project-b/runbook.md) |
 
 ## Projects
 
@@ -23,69 +27,44 @@ This repository provisions the **base infrastructure and boilerplate** that juni
 
 ```
 terraform/
-  bootstrap/{aws,azure}/       # Remote state backends (apply once)
-  project-a-aws/               # Per-engineer AWS sandbox
-  project-b-azure-shared/      # Shared UC metastore (apply once)
-  project-b-azure-engineer/    # Per-engineer Azure/Databricks sandbox
-  modules/                     # Reusable Terraform modules
-app/
-  django-sar-portal/           # Django SAR compliance portal
-  keycloak/                    # Pre-seeded realm export
-  compose/                     # Docker Compose + Caddy
-contracts/                     # JSON Schema data contracts
-seed-data/                     # Generator + committed sample data
-docs/                          # Runbooks, C4 skeleton, business questions
+  bootstrap/{aws,azure}/       # Remote state backends (apply per cloud you use)
+  project-a-aws/               # Project A only
+  project-b-azure-shared/      # Project B shared (once per region)
+  project-b-azure-engineer/    # Project B per engineer
+  modules/
+app/                           # Project A portal + Keycloak + Compose
+contracts/                     # Shared JSON Schema (mainly Project A)
+seed-data/                     # Project B sample data (no AWS required)
+docs/
 ```
 
-## Prerequisites
+## Prerequisites (by track)
 
-- Terraform `>= 1.9`
-- AWS CLI authenticated to the sandbox account (Project A)
-- Azure CLI (`az login`) + Databricks **account admin** (Project B)
-- Docker (for packaging the app artifact)
-- `make`
+Shared: Terraform `>= 1.9`, `make` — [Admin §2](docs/platform-admin/runbook.md#2-shared-tooling)
 
-## Platform admin — settings and credentials at a glance
+| Track | Also install |
+|-------|----------------|
+| **AWS / Project A** | AWS CLI v2 (Docker runs on the EC2 host, not locally) — [Admin §3.1](docs/platform-admin/runbook.md#31-install-and-authenticate-aws) |
+| **Azure / Project B** | Azure CLI + Databricks account admin — [Admin §4.1](docs/platform-admin/runbook.md#41-install-and-authenticate-azure) |
 
-Full detail: **[docs/platform-admin/runbook.md](docs/platform-admin/runbook.md)**.
+## Quick start
 
-**Credentials (CLI / environment — never commit):**
-
-| Auth | Used for |
-|------|----------|
-| AWS profile / SSO / keys | Bootstrap AWS + Project A |
-| `az login` (+ correct subscription) | Bootstrap Azure + Project B (Databricks uses `azure-cli` auth) |
-
-**Files to update before / during first deploy:**
-
-| File | What to set |
-|------|-------------|
-| `terraform/bootstrap/aws` — `state_bucket_name` if default is taken | Globally unique S3 bucket |
-| `terraform/project-*-*/main.tf` — uncomment `backend` blocks | Paste snippets from bootstrap `terraform output` |
-| `terraform/project-b-azure-shared/terraform.tfvars` (from `example.tfvars`) | **`databricks_account_id`** (required); optional metastore adopt + budget email |
-| `terraform/project-a-aws/terraform.tfvars` (optional, from `example.tfvars`) | `budget_alert_email`, `allowed_ingress_cidrs` |
-| `terraform/project-b-azure-engineer` — Makefile vars or tfvars | Shared outputs: `METASTORE_ID`, `ACCESS_CONNECTOR_ID`, `ACCESS_CONNECTOR_PRINCIPAL_ID` |
-| `app/compose/.env` (from `.env.example`) | **Local Compose only** — not required for cloud apply |
-
-## Quick start (admins)
+### Project A only (AWS)
 
 ```bash
-# 1. CLI login
+export AWS_PROFILE=aws_sandbox   # your profile
 aws sts get-caller-identity
-az account show
-
-# 2. Remote state (once per cloud)
 make bootstrap-aws
-make bootstrap-azure
-# → uncomment backend blocks using terraform output snippets
-
-# 3. Project A (per engineer)
+# → uncomment S3 backend in terraform/project-a-aws/main.tf
 make apply-a ENGINEER=alex
+```
 
-# 4. Project B shared (once), then per engineer
-cp terraform/project-b-azure-shared/example.tfvars \
-   terraform/project-b-azure-shared/terraform.tfvars
-# edit databricks_account_id
+### Project B only (Azure)
+
+```bash
+az login && az account show
+make bootstrap-azure
+# → uncomment azurerm backends; set databricks_account_id in shared tfvars
 make apply-b-shared
 make apply-b ENGINEER=alex \
   METASTORE_ID=... \
@@ -93,17 +72,17 @@ make apply-b ENGINEER=alex \
   ACCESS_CONNECTOR_PRINCIPAL_ID=...
 ```
 
-Then attach each junior’s IAM policy / Databricks group membership and (for Phase 4) Power BI licences — see the [admin runbook](docs/platform-admin/runbook.md).
+Full file lists, handoff checklists, and troubleshooting: **[docs/platform-admin/runbook.md](docs/platform-admin/runbook.md)**.
 
 ## Isolation model
 
-Each engineer gets an isolated stack via Terraform workspaces and an `engineer_id` variable:
+Each engineer gets an isolated stack via Terraform workspaces and `engineer_id`:
 
 ```hcl
 local.name_prefix = "sar-${var.engineer_id}"
 ```
 
-All resources are named and tagged with this prefix. Use `make … ENGINEER=<id>` so operators do not need to manage `-var-file` / `-backend-config` flags by hand for routine deploys.
+Use `make … ENGINEER=<id>` for routine deploys.
 
 ## Build boundary (do not provision)
 
@@ -114,10 +93,9 @@ All resources are named and tagged with this prefix. Use `make … ENGINEER=<id>
 
 ## Cost guardrails
 
-- EC2 auto-stop outside working hours (EventBridge)
-- AWS Budgets + Azure Consumption Budget alerts
-- SQL warehouse auto-stop (10 minutes)
-- Cluster policy: single-node, 20-minute auto-terminate
+- EC2 auto-stop outside working hours (Project A)
+- AWS Budgets / Azure Consumption Budget alerts (per track)
+- SQL warehouse auto-stop + cost-capped cluster policy (Project B)
 
 ## Licence
 
