@@ -1,15 +1,20 @@
 # Mentor deploy notes
 
-For the full platform setup (credentials, which files to edit, backends, per-engineer checklist), use:
+Full steps: **[Platform administrator runbook](../platform-admin/runbook.md)**  
+Projects are **independent** — run only the track the engineer needs.
 
-**[Platform administrator runbook](../platform-admin/runbook.md)**
+## Project A only (AWS)
 
-## Quick order of operations
-
-1. AWS + Azure CLI login
-2. `make bootstrap-aws` / `make bootstrap-azure` → uncomment backend blocks
+1. `export AWS_PROFILE=...` → `aws sts get-caller-identity`
+2. `make bootstrap-aws` → uncomment S3 backend in `project-a-aws`
 3. `make apply-a ENGINEER=<id>`
-4. Set `databricks_account_id` in `terraform/project-b-azure-shared/terraform.tfvars` → `make apply-b-shared`
-5. `make apply-b ENGINEER=<id> METASTORE_ID=... ACCESS_CONNECTOR_ID=... ACCESS_CONNECTOR_PRINCIPAL_ID=...`
-6. Attach `junior_developer_policy_arn` to the junior’s IAM principal; add them to Databricks `sar-<id>-data-engineers`
-7. Power BI licences remain manual — [power-bi.md](../project-b/power-bi.md)
+4. Attach `junior_developer_policy_arn` to their IAM principal
+
+## Project B only (Azure)
+
+1. `az login` → set subscription
+2. `make bootstrap-azure` → uncomment azurerm backends
+3. Set `databricks_account_id` in shared `terraform.tfvars` → `make apply-b-shared`
+4. `make apply-b ENGINEER=<id> METASTORE_ID=... ACCESS_CONNECTOR_ID=... ACCESS_CONNECTOR_PRINCIPAL_ID=...`
+5. Add user to Databricks `sar-<id>-data-engineers`
+6. Power BI licences remain manual — [power-bi.md](../project-b/power-bi.md)

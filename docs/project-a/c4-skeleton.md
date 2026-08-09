@@ -10,7 +10,7 @@ Actors and external systems:
 - SAR Compliance Portal (software system) — *provided*
 - SAR Request API (software system) — *you build*
 - Identity Provider / Keycloak (software system) — *provided*
-- Downstream analytics / Databricks (software system) — Project B
+- Downstream analytics / Databricks (software system) — optional narrative peer to Project B; not a runtime dependency of this sandbox
 
 **Task:** Draw relationships (uses, authenticates with, publishes logs to).
 
