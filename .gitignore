@@ -3,6 +3,7 @@
 **/*.tfstate
 **/*.tfstate.*
 **/*.tfplan
+**/terraform/project-a-aws/.build/
 crash.log
 crash.*.log
 override.tf

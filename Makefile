@@ -13,7 +13,7 @@ TF_BOOT_AZURE := terraform/bootstrap/azure
 	init-a plan-a apply-a destroy-a \
 	init-b-shared apply-b-shared \
 	init-b plan-b apply-b destroy-b \
-	fmt validate seed-data package-app lint
+	fmt validate seed-data stage-app lint
 
 help:
 	@echo "SAR sandbox Makefile"
@@ -36,7 +36,8 @@ help:
 	@echo "  make apply-b ENGINEER=alex"
 	@echo ""
 	@echo "Utilities:"
-	@echo "  make fmt | validate | lint | seed-data | package-app"
+	@echo "  make fmt | validate | lint | seed-data | stage-app"
+	@echo "  (Docker is installed/used on the Project A EC2 host, not required locally)"
 
 # ---------------------------------------------------------------------------
 # Bootstrap
@@ -61,7 +62,7 @@ plan-a: init-a
 		-var="engineer_id=$(ENGINEER)" \
 		-var="aws_region=$(AWS_REGION)"
 
-apply-a: init-a package-app
+apply-a: init-a
 	cd $(TF_A) && terraform apply -auto-approve \
 		-var="engineer_id=$(ENGINEER)" \
 		-var="aws_region=$(AWS_REGION)"
@@ -133,9 +134,6 @@ lint:
 seed-data:
 	python3 seed-data/generator/generate.py --out seed-data/out --seed 42
 
-package-app:
-	@mkdir -p /tmp/sar-app-build
-	tar -czf /tmp/sar-app-build/app.tar.gz \
-		-C app \
-		compose django-sar-portal keycloak
-	@echo "Packaged app artifact -> /tmp/sar-app-build/app.tar.gz"
+# Optional manual stage (Terraform also stages via data.external during plan/apply)
+stage-app:
+	bash scripts/stage-app-artifact.sh terraform/project-a-aws/.build/app-artifact

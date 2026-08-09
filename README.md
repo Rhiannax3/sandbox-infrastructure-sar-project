@@ -44,7 +44,7 @@ Shared: Terraform `>= 1.9`, `make` — [Admin §2](docs/platform-admin/runbook.m
 
 | Track | Also install |
 |-------|----------------|
-| **AWS / Project A** | AWS CLI v2, Docker + Compose — [Admin §3.1](docs/platform-admin/runbook.md#31-install-and-authenticate-aws) |
+| **AWS / Project A** | AWS CLI v2 (Docker runs on the EC2 host, not locally) — [Admin §3.1](docs/platform-admin/runbook.md#31-install-and-authenticate-aws) |
 | **Azure / Project B** | Azure CLI + Databricks account admin — [Admin §4.1](docs/platform-admin/runbook.md#41-install-and-authenticate-azure) |
 
 ## Quick start

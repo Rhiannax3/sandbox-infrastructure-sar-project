@@ -10,6 +10,14 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.6"
+    }
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
+    }
   }
 
   # Uncomment after running `make bootstrap-aws` and pasting the output snippet:
@@ -102,6 +110,8 @@ resource "random_password" "oidc_client_secret" {
 
 # ---------------------------------------------------------------------------
 # App artifact bucket + upload
+# Source is staged from the repo (compose + Django + Keycloak + contracts).
+# Docker image builds run on the EC2 host — no local Docker required.
 # ---------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "artifacts" {
@@ -130,16 +140,34 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
   }
 }
 
+locals {
+  app_stage_dir = "${path.module}/.build/app-artifact"
+  app_zip_path  = "${path.module}/.build/app.zip"
+}
+
+# Runs at plan/apply time so archive_file has a source directory (no local Docker).
+data "external" "stage_app_artifact" {
+  program = [
+    "bash",
+    "${path.module}/../../scripts/stage-app-artifact.sh",
+    "--terraform-external",
+    local.app_stage_dir,
+  ]
+}
+
+data "archive_file" "app" {
+  type        = "zip"
+  source_dir  = local.app_stage_dir
+  output_path = local.app_zip_path
+
+  depends_on = [data.external.stage_app_artifact]
+}
+
 resource "aws_s3_object" "app_artifact" {
   bucket = aws_s3_bucket.artifacts.id
-  key    = "app/app.tar.gz"
-  source = "/tmp/sar-app-build/app.tar.gz"
-  etag   = fileexists("/tmp/sar-app-build/app.tar.gz") ? filemd5("/tmp/sar-app-build/app.tar.gz") : null
-
-  lifecycle {
-    # Allow apply before first package-app; cloud-init will fail until artifact exists
-    ignore_changes = [etag]
-  }
+  key    = "app/app.zip"
+  source = data.archive_file.app.output_path
+  etag   = data.archive_file.app.output_md5
 }
 
 # ---------------------------------------------------------------------------

@@ -32,7 +32,7 @@ variable "app_artifact_bucket" {
 variable "app_artifact_key" {
   type        = string
   description = "S3 object key for the app tarball"
-  default     = "app/app.tar.gz"
+  default     = "app/app.zip"
 }
 
 variable "keycloak_admin_password" {
@@ -168,7 +168,7 @@ locals {
     exec > >(tee /var/log/sar-bootstrap.log) 2>&1
 
     dnf update -y
-    dnf install -y docker jq awscli
+    dnf install -y docker jq awscli unzip
     systemctl enable --now docker
     usermod -aG docker ec2-user
 
@@ -180,8 +180,8 @@ locals {
 
     APP_DIR=/opt/sar-sandbox
     mkdir -p "$APP_DIR"
-    aws s3 cp "s3://${var.app_artifact_bucket}/${var.app_artifact_key}" /tmp/app.tar.gz
-    tar -xzf /tmp/app.tar.gz -C "$APP_DIR"
+    aws s3 cp "s3://${var.app_artifact_bucket}/${var.app_artifact_key}" /tmp/app.zip
+    unzip -o /tmp/app.zip -d "$APP_DIR"
 
     cat > "$APP_DIR/.env" <<EOF
     HOSTNAME=${local.hostname}
@@ -195,8 +195,9 @@ locals {
     SAR_API_AUTH_ENABLED=false
     EOF
 
+    # Build Django image and start the stack on this host (no admin laptop Docker).
     cd "$APP_DIR/compose"
-    docker compose --env-file "$APP_DIR/.env" up -d
+    docker compose --env-file "$APP_DIR/.env" up -d --build
 
     echo "Bootstrap complete — https://${local.hostname}"
   USERDATA

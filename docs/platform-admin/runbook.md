@@ -73,7 +73,9 @@ Provision the Django portal, Keycloak, IAM baselines, and SSM integration seam. 
 | Tool | Why |
 |------|-----|
 | AWS CLI v2 | Bootstrap + Project A apply |
-| Docker Engine + Compose | Package/run portal + Keycloak on the EC2 host |
+| `bash` + Python 3 | Staging the app artifact for S3 (no local Docker) |
+
+Docker Engine is installed **on the EC2 sandbox host** by cloud-init and builds/runs the Compose stack there. You do **not** need Docker on your laptop to provision Project A.
 
 **AWS CLI — Linux:**
 
@@ -85,15 +87,6 @@ aws --version
 ```
 
 **macOS:** `brew install awscli`
-
-**Docker — Linux (CachyOS / Arch example):**
-
-```bash
-sudo pacman -S docker docker-compose docker-buildx
-sudo systemctl enable --now docker
-sudo usermod -aG docker "$USER"   # then log out/in
-docker compose version
-```
 
 **Credentials:**
 
@@ -167,7 +160,7 @@ cd terraform/project-a-aws && terraform workspace select alex && terraform outpu
 
 | Task | Command / notes |
 |------|-----------------|
-| Redeploy portal/Keycloak | [`app/compose/redeploy.sh`](../../app/compose/redeploy.sh) `<engineer_id> <instance_id> [region]` |
+| Redeploy portal/Keycloak | [`app/compose/redeploy.sh`](../../app/compose/redeploy.sh) `<engineer_id> <instance_id> [region]` (uploads source zip; host runs `docker compose up --build`) |
 | Live API mode | `SAR_API_MODE=live` after junior writes SSM API URL |
 | JWT to API | `SAR_API_AUTH_ENABLED=true` (Phase 3) |
 | Destroy engineer stack | `make destroy-a ENGINEER=alex` |
@@ -332,7 +325,8 @@ Power BI licence (Phase 4):  [ ]  (optional / later)
 | `Unable to locate credentials` | `export AWS_PROFILE=...` and re-run `aws sts get-caller-identity` |
 | S3 state bucket name taken | Change `state_bucket_name` in bootstrap AWS |
 | Portal OIDC fails | Check nip.io hostname, Keycloak `/auth`, SSM `oidc-client-secret` |
-| Missing `/tmp/sar-app-build/app.tar.gz` | `make package-app` (also run by `apply-a`) |
+| App artifact / stage fails | Ensure `scripts/stage-app-artifact.sh` is executable; Terraform stages via `data.external` during plan |
+| Host containers not up | SSM into the instance and inspect `/var/log/sar-bootstrap.log`; Docker builds run on the EC2 host |
 
 ### Azure (Project B)
 
