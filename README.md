@@ -39,11 +39,14 @@ docs/                          # Runbooks, C4 skeleton, business questions
 
 ## Prerequisites
 
+Install and authenticate these before applying (full steps: [Platform administrator runbook §2](docs/platform-admin/runbook.md#2-install-clis-and-libraries)):
+
 - Terraform `>= 1.9`
-- AWS CLI authenticated to the sandbox account (Project A)
+- AWS CLI v2 (Project A)
 - Azure CLI (`az login`) + Databricks **account admin** (Project B)
-- Docker (for packaging the app artifact)
-- `make`
+- Docker Engine + Compose plugin (app packaging / host stack)
+- `make` and Python `>= 3.11` (seed data)
+- Optional: TFLint, Checkov, pre-commit, Databricks CLI
 
 ## Platform admin — settings and credentials at a glance
 
