@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sar_extras %}
 {% block title %}Requests — SAR Portal{% endblock %}
 {% block content %}
 <div class="panel">
@@ -19,7 +20,7 @@
       {% for item in items %}
       <tr>
         <td><a href="{% url 'request_detail' item.request_id %}">{{ item.request_id|truncatechars:13 }}</a></td>
-        <td>{{ item.document_type }}</td>
+        <td>{{ item.document_type|document_type_label }}</td>
         <td>{{ item.status }}</td>
         <td>{{ item.priority }}</td>
         <td>{{ item.created_at }}</td>

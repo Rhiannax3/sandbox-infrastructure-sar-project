@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sar_extras %}
 {% block title %}Home — SAR Portal{% endblock %}
 {% block content %}
 <div class="panel">
@@ -35,7 +36,7 @@
   <h2>Document types</h2>
   <ul>
     {% for dt in document_types %}
-      <li><code>{{ dt }}</code></li>
+      <li>{{ dt|document_type_label }}</li>
     {% endfor %}
   </ul>
 </div>

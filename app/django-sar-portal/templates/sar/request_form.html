@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Create {{ document_type }} — SAR Portal{% endblock %}
+{% load sar_extras %}
+{% block title %}Create {{ document_type|document_type_label }} — SAR Portal{% endblock %}
 {% block content %}
 <div class="panel">
-  <h1>New {{ document_type|cut:"_"|title }} request</h1>
+  <h1>New {{ document_type|document_type_label }} request</h1>
   <p class="muted">Fields are driven by <code>contracts/</code> JSON Schema. Your Lambda should validate the same contracts.</p>
   <form method="post">
     {% csrf_token %}
