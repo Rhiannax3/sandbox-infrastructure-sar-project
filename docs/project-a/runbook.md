@@ -11,7 +11,8 @@ Related docs you will use along the way:
 
 | Doc                                                                      | When                                 |
 | ------------------------------------------------------------------------ | ------------------------------------ |
-| [C4 skeleton](./c4-skeleton.md)                                          | Phase 1 diagrams; update in Phase 2+ |
+| [C4 skeleton](./c4-skeleton.md) | Phase 1 diagrams; update in Phase 2+ |
+| [C1–C4 targets](./c1-system-context.md) | Mentor reference diagrams (C1; see also C2/C3/C4 siblings) |
 | `[contracts/](../../contracts/)`                                         | Phase 2 validation                   |
 | [Portal API client](../../app/django-sar-portal/sar/services/sar_api.py) | Expected HTTP paths                  |
 | [Architecture overview](../architecture.md)                              | Big picture / build boundary         |
