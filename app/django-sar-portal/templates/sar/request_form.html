@@ -21,7 +21,7 @@
     <label for="priority">Priority</label>
     <select id="priority" name="priority">
       {% for value, label in priorities %}
-        <option value="{{ value }}" {% if value == "medium" %}selected{% endif %}>{{ label }}</option>
+        <option value="{{ value }}" {% if value == "Medium" %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
     <label for="officer_id">Your officer ID</label>

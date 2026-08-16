@@ -47,8 +47,8 @@ Work this phase **one layer at a time**. At each layer, pause on the design deci
   "document_type": "user_consent_log",
   "subject": { },
   "requestor": { },
-  "priority": "medium",
-  "status": "submitted",
+  "priority": "Medium",
+  "status": "Submitted",
   "created_at": "…",
   "payload": { }
 }
@@ -81,7 +81,7 @@ Work this phase **one layer at a time**. At each layer, pause on the design deci
 4. **IDs** — Who mints `request_id`? Portal/mock often expects a UUID on create. Prefer server-generated UUID on `POST` and return it in the body; reject client IDs that collide if you allow them.
 5. **List semantics** — Unfiltered `GET /requests` is enough for Phase 2. Will you later filter by status, officer, or document type? That choice feeds Layer C (keys / GSIs).
 6. **Idempotency & PUT** — Is `PUT` full replace of the envelope + payload, or partial patch? Full replace is simpler; document it. What happens on unknown `id`? (`404`)
-7. **Status values** — Align with the envelope enum (`draft`, `submitted`, `in_progress`, `pending_approval`, `fulfilled`, `rejected`, `cancelled`). Which values can a standard officer set vs leave for Phase 3 approve flows?
+7. **Status values** — Align with the envelope enum (`Draft`, `Submitted`, `In Progress`, `Pending Approval`, `Fulfilled`, `Rejected`, `Cancelled`). Which values can a standard officer set vs leave for Phase 3 approve flows?
 
 **Exit Layer A when:** `curl` can hit each route (even if persistence is still in-memory or stubbed) and responses use JSON.
 

@@ -73,7 +73,7 @@ class SarApiClient:
             now = datetime.now(timezone.utc).isoformat()
             record = {
                 "request_id": str(uuid.uuid4()),
-                "status": "submitted",
+                "status": "Submitted",
                 "created_at": now,
                 "updated_at": now,
                 "completed_at": None,

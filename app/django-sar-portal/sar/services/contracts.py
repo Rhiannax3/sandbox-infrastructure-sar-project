@@ -53,7 +53,7 @@ def document_type_choices() -> list[tuple[str, str]]:
 def priority_choices() -> list[tuple[str, str]]:
     schema = envelope_schema()
     enum_values = schema["properties"]["priority"]["enum"]
-    return [(value, value.title()) for value in enum_values]
+    return [(value, value) for value in enum_values]
 
 
 def payload_field_defs(document_type: str) -> list[dict]:

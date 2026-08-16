@@ -70,18 +70,18 @@
     },
     "priority": {
       "type": "string",
-      "enum": ["low", "medium", "high", "critical"]
+      "enum": ["Low", "Medium", "High", "Critical"]
     },
     "status": {
       "type": "string",
       "enum": [
-        "draft",
-        "submitted",
-        "in_progress",
-        "pending_approval",
-        "fulfilled",
-        "rejected",
-        "cancelled"
+        "Draft",
+        "Submitted",
+        "In Progress",
+        "Pending Approval",
+        "Fulfilled",
+        "Rejected",
+        "Cancelled"
       ]
     },
     "sla_days": {

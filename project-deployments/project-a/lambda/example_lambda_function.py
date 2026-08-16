@@ -21,7 +21,7 @@ def enrich_for_create(body: dict) -> dict:
     return {
         **body,
         "request_id": str(uuid.uuid4()),
-        "status": body.get("status") or "submitted",
+        "status": body.get("status") or "Submitted",
         "created_at": now,
         "updated_at": now,
         "completed_at": body.get("completed_at"),
