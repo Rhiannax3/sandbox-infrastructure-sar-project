@@ -105,8 +105,9 @@ Write your function in [`project-deployments/project-a/lambda/`](../../project-d
 
 ```text
 project-deployments/project-a/lambda/
-  lambda_function.py        # handler: lambda_function.lambda_handler
-  validate.py               # add extra modules here
+  example_lambda_function.py  # template — copy to lambda_function.py
+  lambda_function.py          # handler: lambda_function.lambda_handler (gitignored)
+  validate.py                 # provided — envelope + payload schema checks
   requirements.txt
   publish.sh
   contracts/
@@ -116,22 +117,9 @@ project-deployments/project-a/lambda/
     user-consent-log.schema.json
 ```
 
-1. Replace the stub in `lambda_function.py`. Add sibling modules as needed (`from validate import …` works; parent-directory imports do not).
-2. Load schemas relative to the handler (in AWS they live at `/var/task/contracts`):
-
-```python
-from pathlib import Path
-import json
-
-CONTRACTS_DIR = Path(__file__).resolve().parent / "contracts"
-
-def load_schema(name: str) -> dict:
-    with (CONTRACTS_DIR / name).open(encoding="utf-8") as f:
-        return json.load(f)
-```
-
-3. Map `document_type` → filename the same way the portal does (`user_profile_summary` → `user-profile-summary.schema.json`, etc.).
-4. From a laptop/CI identity (not the EC2 instance role):
+1. Copy `example_lambda_function.py` to `lambda_function.py` and replace the stub. Import the provided `validate.py` (`from validate import parse_body, validate_request, ContractError`). Add other sibling modules as needed; parent-directory imports do not work.
+2. Enrich POST bodies with `request_id` / `created_at` / `status`, then `validate_request` (payload schema by `document_type`, then the envelope). Invalid bodies → 4xx via `ContractError.to_response()`.
+3. From a laptop/CI identity (not the EC2 instance role):
 
 ```bash
 cd project-deployments/project-a/lambda

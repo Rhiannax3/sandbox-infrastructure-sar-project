@@ -17,7 +17,14 @@ rm -rf "$BUILD" "$ZIP"
 mkdir -p "$BUILD"
 
 shopt -s nullglob
-cp -a "$ROOT"/*.py "$BUILD/"
+if [[ ! -f "$ROOT/lambda_function.py" ]]; then
+  echo "Copy example_lambda_function.py to lambda_function.py, then retry." >&2
+  exit 1
+fi
+for src in "$ROOT"/*.py; do
+  [[ "$(basename "$src")" == example_lambda_function.py ]] && continue
+  cp -a "$src" "$BUILD/"
+done
 cp -a "$ROOT/contracts" "$BUILD/contracts"
 shopt -u nullglob
 

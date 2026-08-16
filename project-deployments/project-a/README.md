@@ -11,41 +11,34 @@ project-deployments/
   project-a/
     README.md                 ← you are here
     lambda/
-      lambda_function.py      ← handler (replace the stub)
-      requirements.txt        ← third-party packages (e.g. jsonschema)
-      publish.sh              ← zip + aws lambda update-function-code
-      contracts/              ← shared schemas (portal + Lambda)
+      example_lambda_function.py  ← template (copy this)
+      lambda_function.py          ← your handler (gitignored)
+      validate.py                 ← provided schema validation
+      requirements.txt            ← third-party packages (e.g. jsonschema)
+      publish.sh                  ← zip + aws lambda update-function-code
+      contracts/                  ← shared schemas (portal + Lambda)
         *.schema.json
 ```
 
-Add extra modules next to the handler (`validate.py`, `repository.py`, …). Import them as siblings:
+Use the provided [`validate.py`](./lambda/validate.py) rather than rebuilding schema loading. After enriching a create body with `request_id` / `created_at` / `status`:
 
 ```python
-from validate import validate_request
+from validate import ContractError, parse_body, validate_request
+
+body = enrich_for_create(parse_body(event))
+validate_request(body)
 ```
 
-Those files must live **in this folder** (they unzip to `/var/task`). You cannot import from a parent directory or from the EC2 host. Extra modules and build artefacts are **gitignored** so they stay out of this repo; `publish.sh` still zips whatever is on disk.
+Invalid contracts raise `ContractError`; call `exc.to_response()` for a 400 JSON body. Extra modules you add (`repository.py`, …) stay **gitignored**; `publish.sh` still zips whatever is on disk.
 
 ## Write your function
 
 1. Create the Lambda in AWS first (`sar-<you>-…`) and attach `lambda_execution_role_arn` from your mentor.
 2. Set the handler to `lambda_function.lambda_handler` (Runtime settings).
-3. Edit `lambda/lambda_function.py` (and any extra `.py` files). Extra files are not committed to this repository.
-4. Keep validating against `lambda/contracts/` — same files the portal mounts. Do not fork a second copy of the schemas.
+3. Copy `example_lambda_function.py` to `lambda_function.py`, then edit that copy (and any extra `.py` files). Your copy and extra files are not committed to this repository. Import `validate.py` as-is.
+4. Keep validating against `lambda/contracts/` via `validate_request` — same files the portal mounts. Do not fork a second copy of the schemas.
 
-Runtime schema path (works in `/var/task` after you publish):
-
-```python
-from pathlib import Path
-
-CONTRACTS_DIR = Path(__file__).resolve().parent / "contracts"
-```
-
-| `document_type` | Schema file |
-|-----------------|-------------|
-| `user_profile_summary` | `user-profile-summary.schema.json` |
-| `user_activity_report` | `user-activity-report.schema.json` |
-| `user_consent_log` | `user-consent-log.schema.json` |
+`validate.py` already maps `document_type` to those files. You only need to enrich then call `validate_request`.
 
 ## Publish
 
@@ -68,7 +61,7 @@ After a schema change, publish again so the function zip matches the portal.
 
 ## Lambda console
 
-The inline editor is optional for tiny stubs (package must stay under 3 MB unzipped). Prefer this directory + `publish.sh`. If you do use the console, copy the same files (`lambda_function.py`, extra modules, and the `contracts/` folder) into the function and click **Deploy**.
+The inline editor is optional for tiny stubs (package must stay under 3 MB unzipped). Prefer this directory + `publish.sh`. If you do use the console, copy `lambda_function.py`, `validate.py`, extra modules, and the `contracts/` folder into the function and click **Deploy**.
 
 ## Alternatives (optional)
 

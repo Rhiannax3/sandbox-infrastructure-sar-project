@@ -3,6 +3,7 @@
 !.gitignore
 !publish.sh
 !requirements.txt
-!lambda_function.py
+!example_lambda_function.py
+!validate.py
 !contracts/
 !contracts/**
