@@ -68,3 +68,7 @@ Thumbs.db
 
 # Node (if any tooling added later)
 node_modules/
+
+# Other
+sandbox-code/
+sandbox-code/**
