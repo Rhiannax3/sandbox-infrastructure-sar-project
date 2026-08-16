@@ -6,4 +6,6 @@ instance_type      = "t3.medium"
 enable_auto_stop   = true
 monthly_budget_usd = 80
 # budget_alert_email = "mentor@example.com"
-# allowed_ingress_cidrs = ["203.0.113.0/24"]
+# Open to the internet so Caddy can complete Let's Encrypt challenges.
+# Do NOT copy the documentation CIDR 203.0.113.0/24 into a live sandbox.
+# allowed_ingress_cidrs = ["0.0.0.0/0"]

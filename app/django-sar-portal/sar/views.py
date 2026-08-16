@@ -125,7 +125,7 @@ def _build_payload_from_post(request: HttpRequest, document_type: str, field_def
     user = request.user
     return {
         "document_type": document_type,
-        "priority": request.POST.get("priority", "medium"),
+        "priority": request.POST.get("priority", "Medium"),
         "notes": request.POST.get("notes", ""),
         "subject": {
             "subject_id": request.POST.get("subject_id", "SUBJ-UNKNOWN"),

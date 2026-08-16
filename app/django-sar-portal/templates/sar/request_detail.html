@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load sar_extras %}
 {% block title %}Request {{ item.request_id }} — SAR Portal{% endblock %}
 {% block content %}
 <div class="panel">
   <h1>Request detail</h1>
   <p>
     <span class="badge">{{ item.status }}</span>
-    <span class="badge">{{ item.document_type }}</span>
+    <span class="badge">{{ item.document_type|document_type_label }}</span>
     <span class="badge">{{ item.priority }}</span>
   </p>
   <pre>{{ item_json }}</pre>

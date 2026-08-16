@@ -38,6 +38,8 @@ venv/
 .mypy_cache/
 .ruff_cache/
 *.egg
+pyproject.toml
+uv.lock
 
 # Django
 *.log
@@ -59,9 +61,16 @@ Thumbs.db
 .checkov/
 .pre-commit-cache/
 
+# Local Terraform plan/apply/output records (written by Make targets)
+/records/
+
 # Generated archives (deploy artifacts are built locally)
 *.tar.gz
 !seed-data/out/**/*.tar.gz
 
 # Node (if any tooling added later)
 node_modules/
+
+# Other
+sandbox-code/
+sandbox-code/**

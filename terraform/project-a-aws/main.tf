@@ -22,12 +22,20 @@ terraform {
 
   # Uncomment after running `make bootstrap-aws` and pasting the output snippet:
   # backend "s3" {
-  #   bucket         = "sar-sandbox-tfstate"
-  #   key            = "project-a-aws/terraform.tfstate"
-  #   region         = "eu-west-2"
-  #   dynamodb_table = "sar-sandbox-tfstate-lock"
-  #   encrypt        = true
+  #   bucket       = "sar-sandbox-tfstate"
+  #   key          = "project-a-aws/terraform.tfstate"
+  #   region       = "eu-west-2"
+  #   encrypt      = true
+  #   use_lockfile = true
   # }
+
+  backend "s3" {
+    bucket       = "sar-sandbox-tfstate-3805137978"
+    key          = "project-a-aws/terraform.tfstate"
+    region       = "eu-west-2"
+    encrypt      = true
+    use_lockfile = true
+  }
 }
 
 provider "aws" {
@@ -110,7 +118,7 @@ resource "random_password" "oidc_client_secret" {
 
 # ---------------------------------------------------------------------------
 # App artifact bucket + upload
-# Source is staged from the repo (compose + Django + Keycloak + contracts).
+# Source is staged from the repo (compose + Django + Keycloak + project-deployments/project-a/lambda/contracts).
 # Docker image builds run on the EC2 host — no local Docker required.
 # ---------------------------------------------------------------------------
 
@@ -245,8 +253,9 @@ resource "aws_budgets_budget" "engineer" {
   time_unit    = "MONTHLY"
 
   cost_filter {
-    name   = "TagKeyValue"
-    values = ["user:Engineer$$${var.engineer_id}"]
+    name = "TagKeyValue"
+    # AWS expects key$value; use ${"$"} so Terraform does not treat $ as template syntax.
+    values = ["user:Engineer${"$"}${var.engineer_id}"]
   }
 
   notification {

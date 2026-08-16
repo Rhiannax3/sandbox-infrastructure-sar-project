@@ -39,16 +39,21 @@ def payload_schema(document_type: str) -> dict:
     return load_schema(filename)
 
 
+def humanize_document_type(document_type: str) -> str:
+    """Display label for a document_type enum value (snake_case → Title Case)."""
+    return document_type.replace("_", " ").title()
+
+
 def document_type_choices() -> list[tuple[str, str]]:
     schema = envelope_schema()
     enum_values = schema["properties"]["document_type"]["enum"]
-    return [(value, value.replace("_", " ").title()) for value in enum_values]
+    return [(value, humanize_document_type(value)) for value in enum_values]
 
 
 def priority_choices() -> list[tuple[str, str]]:
     schema = envelope_schema()
     enum_values = schema["properties"]["priority"]["enum"]
-    return [(value, value.title()) for value in enum_values]
+    return [(value, value) for value in enum_values]
 
 
 def payload_field_defs(document_type: str) -> list[dict]:

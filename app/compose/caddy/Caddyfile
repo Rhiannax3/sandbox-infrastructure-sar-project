@@ -1,9 +1,13 @@
 {$HOSTNAME:localhost} {
-  encode gzip
+	encode gzip
 
-  # Keycloak serves with KC_HTTP_RELATIVE_PATH=/auth
-  reverse_proxy /auth/* keycloak:8080
+	# Match /auth and /auth/... (Keycloak KC_HTTP_RELATIVE_PATH=/auth).
+	# /auth/* alone misses bare /auth and sends it to Django → 404.
+	handle /auth* {
+		reverse_proxy keycloak:8080
+	}
 
-  # Django portal (everything else)
-  reverse_proxy django:8000
+	handle {
+		reverse_proxy django:8000
+	}
 }

@@ -73,7 +73,7 @@ class SarApiClient:
             now = datetime.now(timezone.utc).isoformat()
             record = {
                 "request_id": str(uuid.uuid4()),
-                "status": "submitted",
+                "status": "Submitted",
                 "created_at": now,
                 "updated_at": now,
                 "completed_at": None,
@@ -141,8 +141,11 @@ class SarApiClient:
                 body = response.json()
             except ValueError:
                 body = response.text
+            detail = body if isinstance(body, str) else (
+                body.get("message") or body.get("error") or body
+            )
             raise SarApiError(
-                f"API returned {response.status_code}",
+                f"API returned {response.status_code}: {detail}",
                 status_code=response.status_code,
                 body=body,
             )

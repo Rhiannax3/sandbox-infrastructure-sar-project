@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage portal/Keycloak/contracts for upload to the EC2 host.
+# Stage portal/Keycloak/contracts/lambda package for upload to the EC2 host.
 # No Docker required — the instance builds and runs Compose.
 #
 # Usage:
@@ -23,7 +23,9 @@ mkdir -p "$DEST"
 cp -a "$ROOT/app/compose" "$DEST/compose"
 cp -a "$ROOT/app/django-sar-portal" "$DEST/django-sar-portal"
 cp -a "$ROOT/app/keycloak" "$DEST/keycloak"
-cp -a "$ROOT/contracts" "$DEST/contracts"
+cp -a "$ROOT/project-deployments/project-a/lambda/contracts" "$DEST/contracts"
+cp -a "$ROOT/project-deployments/project-a/lambda" "$DEST/lambda"
+rm -rf "$DEST/lambda/.build" "$DEST/lambda/function.zip"
 
 find "$DEST" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
 find "$DEST" -type d -name '.venv' -prune -exec rm -rf {} + 2>/dev/null || true

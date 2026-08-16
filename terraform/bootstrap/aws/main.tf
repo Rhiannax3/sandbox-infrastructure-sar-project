@@ -68,40 +68,23 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
   restrict_public_buckets = true
 }
 
-resource "aws_dynamodb_table" "tfstate_lock" {
-  name         = "sar-sandbox-tfstate-lock"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
+# State locking uses S3 native lockfiles (backend use_lockfile = true).
+# DynamoDB lock tables are no longer required (dynamodb_table is deprecated in Terraform >= 1.11).
 
 output "state_bucket" {
   value       = aws_s3_bucket.tfstate.bucket
   description = "S3 bucket for Terraform state"
 }
 
-output "lock_table" {
-  value       = aws_dynamodb_table.tfstate_lock.name
-  description = "DynamoDB table for state locking"
-}
-
 output "backend_config_snippet" {
-  value       = <<-EOT
+  value = <<-EOT
     backend "s3" {
-      bucket         = "${aws_s3_bucket.tfstate.bucket}"
-      key            = "project-a-aws/terraform.tfstate"
-      region         = "${var.aws_region}"
-      dynamodb_table = "${aws_dynamodb_table.tfstate_lock.name}"
-      encrypt        = true
+      bucket       = "${aws_s3_bucket.tfstate.bucket}"
+      key          = "project-a-aws/terraform.tfstate"
+      region       = "${var.aws_region}"
+      encrypt      = true
+      use_lockfile = true
     }
   EOT
-  description = "Paste into project-a-aws backend block after bootstrap"
+  description = "Paste into the terraform {} block in project-a-aws/main.tf after bootstrap"
 }

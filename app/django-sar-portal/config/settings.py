@@ -127,6 +127,9 @@ OIDC_RP_CLIENT_ID = env("OIDC_RP_CLIENT_ID", "sar-portal")
 OIDC_RP_CLIENT_SECRET = env("OIDC_RP_CLIENT_SECRET", "CHANGE_ME_VIA_ENV")
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_RP_SCOPES = "openid profile email sar:read sar:write"
+# Keycloak sar-portal client requires PKCE S256 (realm attribute pkce.code.challenge.method).
+OIDC_USE_PKCE = True
+OIDC_PKCE_CODE_CHALLENGE_METHOD = "S256"
 
 OIDC_OP_AUTHORIZATION_ENDPOINT = f"{OIDC_OP_BASE}/protocol/openid-connect/auth"
 OIDC_OP_TOKEN_ENDPOINT = f"{OIDC_OP_BASE}/protocol/openid-connect/token"
@@ -154,7 +157,12 @@ SAR_API_AUTH_ENABLED = env_bool("SAR_API_AUTH_ENABLED", False)
 SAR_API_BASE_URL_OVERRIDE = env("SAR_API_BASE_URL", "")
 SSM_API_BASE_URL_PARAM = f"/sar-sandbox/{ENGINEER_ID}/api-base-url"
 
-CONTRACTS_DIR = Path(env("CONTRACTS_DIR", str(BASE_DIR.parent.parent / "contracts")))
+CONTRACTS_DIR = Path(
+    env(
+        "CONTRACTS_DIR",
+        str(BASE_DIR.parent.parent / "project-deployments" / "project-a" / "lambda" / "contracts"),
+    )
+)
 if not CONTRACTS_DIR.exists():
     CONTRACTS_DIR = Path("/contracts")
 
