@@ -52,7 +52,7 @@ ENGINEER_ID=<you> ./publish.sh sar-<you>-lambda          # region defaults to eu
 # ENGINEER_ID=<you> ./publish.sh sar-<you>-lambda eu-west-2
 ```
 
-That command tars this directory (no `pip` on your machine), uploads it to `s3://sar-<you>-artifacts-…/lambda/src.tar.gz`, and SSM-runs packaging on the host. The instance role is allowed to call `lambda:UpdateFunctionCode` for `sar-<you>-*` functions.
+The first publish installs `jsonschema` on the host and caches it under `.deps`. Later publishes reuse that cache unless `requirements.txt` changed.
 
 If you are already in a Session Manager shell on the host:
 

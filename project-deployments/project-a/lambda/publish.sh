@@ -21,11 +21,8 @@ BUILD="$ROOT/.build"
 ZIP="$ROOT/function.zip"
 
 on_ec2() {
-  local token
-  token="$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" \
-    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" 2>/dev/null)" || return 1
-  curl -sf -H "X-aws-ec2-metadata-token: ${token}" \
-    "http://169.254.169.254/latest/meta-data/instance-id" >/dev/null 2>&1
+  # Instant on the sandbox host; do not probe 169.254 from a laptop (curl can hang for minutes).
+  [[ -f /opt/sar-sandbox/.env ]]
 }
 
 ensure_pip() {
@@ -34,6 +31,80 @@ ensure_pip() {
   fi
   echo "Installing python3-pip on the sandbox host..."
   sudo dnf install -y python3-pip zip >/dev/null
+}
+
+lambda_runtime() {
+  aws lambda get-function-configuration \
+    --function-name "$FUNCTION_NAME" \
+    --region "$REGION" \
+    --query Runtime \
+    --output text
+}
+
+lambda_arch() {
+  aws lambda get-function-configuration \
+    --function-name "$FUNCTION_NAME" \
+    --region "$REGION" \
+    --query 'Architectures[0]' \
+    --output text
+}
+
+sync_python_deps() {
+  local req="$ROOT/requirements.txt"
+  local deps="$ROOT/.deps"
+  local hash_file="$deps/.requirements.sha256"
+  local req_hash="" runtime arch pyver docker_platform pip_platform cache_key
+
+  [[ -s "$req" ]] || return 0
+
+  runtime="$(lambda_runtime)"
+  arch="$(lambda_arch)"
+  pyver="${runtime#python}"
+  docker_platform="linux/amd64"
+  pip_platform="manylinux2014_x86_64"
+  if [[ "$arch" == "arm64" ]]; then
+    docker_platform="linux/arm64"
+    pip_platform="manylinux2014_aarch64"
+  fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    req_hash="$(sha256sum "$req" | awk '{print $1}')"
+  else
+    req_hash="$(shasum -a 256 "$req" | awk '{print $1}')"
+  fi
+  cache_key="${runtime}-${arch}-${req_hash}"
+
+  if [[ -f "$hash_file" && "$(cat "$hash_file")" == "$cache_key" && -d "$deps" ]]; then
+    echo "Reusing cached Python dependencies in $deps ($runtime / $arch)"
+    return 0
+  fi
+
+  echo "Installing Python dependencies for ${runtime} (${arch})..."
+  rm -rf "$deps"
+  mkdir -p "$deps"
+
+  if sudo docker run --rm --platform "$docker_platform" \
+    -v "$deps":/var/task \
+    -v "$req":/requirements.txt:ro \
+    "public.ecr.aws/lambda/python:${pyver}" \
+    pip install --disable-pip-version-check -r /requirements.txt -t /var/task
+  then
+    printf '%s\n' "$cache_key" >"$hash_file"
+    return 0
+  fi
+
+  echo "Docker Lambda image unavailable; installing Lambda-compatible wheels with pip..."
+  ensure_pip
+  python3 -m pip install \
+    --disable-pip-version-check \
+    --platform "$pip_platform" \
+    --python-version "$pyver" \
+    --implementation cp \
+    --only-binary=:all: \
+    --upgrade \
+    -r "$req" \
+    -t "$deps"
+  printf '%s\n' "$cache_key" >"$hash_file"
 }
 
 package_on_host() {
@@ -45,17 +116,19 @@ package_on_host() {
     echo "Copy example_lambda_function.py to lambda_function.py, then retry." >&2
     exit 1
   fi
+
+  sync_python_deps
+  if [[ -d "$ROOT/.deps" ]]; then
+    cp -a "$ROOT/.deps"/. "$BUILD/"
+    rm -f "$BUILD/.requirements.sha256"
+  fi
+
   for src in "$ROOT"/*.py; do
     [[ "$(basename "$src")" == example_lambda_function.py ]] && continue
     cp -a "$src" "$BUILD/"
   done
   cp -a "$ROOT/contracts" "$BUILD/contracts"
   shopt -u nullglob
-
-  ensure_pip
-  if [[ -s "$ROOT/requirements.txt" ]]; then
-    python3 -m pip install --quiet -r "$ROOT/requirements.txt" -t "$BUILD"
-  fi
 
   (
     cd "$BUILD"
@@ -78,12 +151,6 @@ PY
 }
 
 if on_ec2; then
-  if [[ -f /opt/sar-sandbox/.env ]]; then
-    set -a
-    # shellcheck disable=SC1091
-    source /opt/sar-sandbox/.env
-    set +a
-  fi
   package_on_host
   exit 0
 fi
@@ -117,6 +184,7 @@ trap 'rm -f "$SRC_TAR" "$SSM_INPUT"' EXIT
 
 tar -C "$ROOT" \
   --exclude .build \
+  --exclude .deps \
   --exclude function.zip \
   --exclude __pycache__ \
   --exclude '*.pyc' \
