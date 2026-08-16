@@ -4,7 +4,7 @@
 {% block content %}
 <div class="panel">
   <h1>New {{ document_type|document_type_label }} request</h1>
-  <p class="muted">Fields are driven by <code>contracts/</code> JSON Schema. Your Lambda should validate the same contracts.</p>
+  <p class="muted">Fields are driven by <code>project-deployments/project-a/lambda/contracts/</code> JSON Schema. Your Lambda should validate the same contracts.</p>
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="document_type" value="{{ document_type }}">

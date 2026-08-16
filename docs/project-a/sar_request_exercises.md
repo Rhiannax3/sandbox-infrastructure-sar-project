@@ -11,7 +11,7 @@ Phased delivery plan for the AWS API & Document Request System. Read the environ
 **Your Goals:**
 
 1. Complete the Context and Container diagrams in the [C4 skeleton](./c4-skeleton.md).
-2. Write a simple Python Lambda named `sar-<you>-hello` and attach `lambda_execution_role_arn`.
+2. Write a simple Python Lambda named `sar-<you>-hello` and attach `lambda_execution_role_arn`. You can develop and publish it from [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) (`./publish.sh sar-<you>-hello`).
 3. Create an API Gateway with `GET /health` pointing to your Lambda. Return JSON like `{"status":"ok","message":"Hello from <you>"}`.
 4. Save the API **base URL** (include REST **stage** if applicable — see [runbook §4.1](./runbook.md#41-portal--your-api-ssm)) into SSM `/sar-sandbox/<you>/api-base-url`.
 5. Confirm `curl "$URL/health"` returns 200, then ask your mentor to flip the portal to `SAR_API_MODE=live` and recreate Django.
@@ -35,7 +35,7 @@ RESTful APIs use standard HTTP methods (`POST` to create, `GET` to read, `PUT` t
 
 AWS Lambda is **stateless** — when an invocation finishes, in-memory state is gone. Persistent SAR requests need an external store: **DynamoDB**.
 
-Bad input should fail fast. **JSON Schema contracts** in `[contracts/](../../contracts/)` define the envelope and per–document-type payloads. Validate before you write.
+Bad input should fail fast. **JSON Schema contracts** in [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/) define the envelope and per–document-type payloads. Validate before you write.
 
 Work this phase **one layer at a time**. At each layer, pause on the design decisions, note your choice for your mentor, then implement. Update your [C3 Component](./c3-component.md) diagram as the pieces appear (router → validator → repository).
 
@@ -99,18 +99,16 @@ Work this phase **one layer at a time**. At each layer, pause on the design deci
 
 ##### Sharing the data contracts with your Lambda
 
-The portal already loads schemas from the repo’s [`contracts/`](../../contracts/) folder on the EC2 host. Your Lambda does **not** see that disk. You must **ship or fetch the same JSON files** into the function’s runtime. Treat the repo `contracts/` as the source of truth — do not hand-edit a divergent copy for “just Lambda.”
+Write your function in [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md). Schemas already sit next to the handler at `lambda/contracts/` (the same files the portal mounts). Publish that folder — do not keep a second, divergent copy of the schemas.
 
-**Recommended for this sandbox: bundle in the deployment package**
-
-1. Keep a small project folder for your function, e.g. `lambda/` or `sar-api/`.
-2. Copy (or symlink-and-package) the four schema files next to your code, for example:
+**Edit and publish from this repo layout**
 
 ```text
-sar-api/
-  handler.py
-  validate.py
-  requirements.txt          # e.g. jsonschema
+project-deployments/project-a/lambda/
+  lambda_function.py        # handler: lambda_function.lambda_handler
+  validate.py               # add extra modules here
+  requirements.txt
+  publish.sh
   contracts/
     sar-request-envelope.schema.json
     user-profile-summary.schema.json
@@ -118,17 +116,8 @@ sar-api/
     user-consent-log.schema.json
 ```
 
-3. When you zip for upload, include the `contracts/` directory:
-
-```bash
-cd sar-api
-# install deps into the package if needed (simple zip deploy)
-pip install -r requirements.txt -t .
-zip -r ../sar-api.zip . -x '*.pyc' -x '__pycache__/*'
-aws lambda update-function-code --function-name sar-<you>-… --zip-file fileb://../sar-api.zip
-```
-
-4. In code, resolve paths relative to the module file (works in Lambda’s `/var/task`):
+1. Replace the stub in `lambda_function.py`. Add sibling modules as needed (`from validate import …` works; parent-directory imports do not).
+2. Load schemas relative to the handler (in AWS they live at `/var/task/contracts`):
 
 ```python
 from pathlib import Path
@@ -141,29 +130,37 @@ def load_schema(name: str) -> dict:
         return json.load(f)
 ```
 
-5. Map `document_type` → filename the same way the portal does (`user_profile_summary` → `user-profile-summary.schema.json`, etc.).
+3. Map `document_type` → filename the same way the portal does (`user_profile_summary` → `user-profile-summary.schema.json`, etc.).
+4. From a laptop/CI identity (not the EC2 instance role):
 
-**Re-copy when contracts change.** If you edit schemas in the monorepo, refresh `sar-api/contracts/` (or your packaging step) and redeploy — otherwise portal and API will disagree and Phase 2 demos will fail mysteriously.
+```bash
+cd project-deployments/project-a/lambda
+./publish.sh sar-<you>-lambda          # optional second arg: region (default eu-west-2)
+```
+
+Full steps, console notes, and why not to deploy from SSM on the host: [`project-deployments/project-a/README.md`](../../project-deployments/project-a/README.md).
+
+**Schema changes:** edit `lambda/contracts/` once, then publish again so the zip matches the portal. Do not invent inline Python dicts as a second source of truth.
 
 **Other options (when to use them)**
 
 | Approach | How | Pros | Cons / when |
 |----------|-----|------|-------------|
-| **Zip bundle** (above) | Schemas inside the deployment package | Simple; no extra IAM; versioned with the function | Must redeploy to pick up schema edits |
-| **Lambda layer** | Publish a layer with `/contracts` (or `python/contracts`) and attach it; read from `/opt/...` | Share across several functions; smaller function zips | Extra publish step; still redeploy/update layer version on schema change |
-| **S3 object(s)** | Upload `contracts/` to e.g. `s3://sar-<you>-artifacts-…/contracts/`; Lambda `GetObject` on cold start and cache | Update schemas without code deploy | Needs IAM + bucket; cache invalidation; more moving parts than this phase needs |
+| **Zip from `project-deployments/project-a/lambda/`** (above) | Schemas already inside the package | Simple; no extra IAM; versioned with the function | Must republish to pick up schema edits |
+| **Lambda layer** | Publish a layer with `/contracts` (or `python/contracts`) and attach it; read from `/opt/...` | Share across several functions; smaller function zips | Extra publish step; still update the layer version on schema change |
+| **S3 object(s)** | Upload `contracts/` to e.g. `s3://sar-<you>-artifacts-…/contracts/`; Lambda `GetObject` on cold start and cache | Update schemas without a code deploy | Needs IAM + bucket; cache invalidation; more moving parts than this phase needs |
 
-For Project A, prefer **zip bundle** unless your mentor asks you to practise layers or S3.
+For Project A, prefer the zip in `project-deployments/project-a/lambda/` unless your mentor asks you to practise layers or S3.
 
 **Design decisions to consider:**
 
-1. **Packaging choice** — Zip vs layer vs S3 (table above). Document which you picked.
+1. **Packaging choice** — Stay with `project-deployments/project-a/lambda/` + `publish.sh`, or layer / S3 (table above). Document which you picked.
 2. **Library** — e.g. `jsonschema` in Python. How do you surface the first vs all validation errors to the officer-facing API?
 3. **Strictness** — Envelope has `additionalProperties: false`. Will you strip unknown fields or reject them? Rejecting matches the contract spirit.
 4. **Create vs update** — On create, do you require `request_id`/`created_at` from the client or set them server-side (and validate after enrichment)? Server-side enrichment then validate is a common pattern.
 5. **Read paths** — Do `GET`s re-validate stored items (catch old bad data) or trust the store? Usually trust the store; optionally log if a stored item fails schema.
 
-**Exit Layer B when:** Invalid bodies never reach a successful write; at least one deliberate bad payload demo returns 4xx; schemas are loaded from the same files as repo `contracts/` (not reinvented inline as Python dicts).
+**Exit Layer B when:** Invalid bodies never reach a successful write; at least one deliberate bad payload demo returns 4xx; schemas are loaded from `project-deployments/project-a/lambda/contracts/` (not reinvented inline as Python dicts).
 
 ---
 

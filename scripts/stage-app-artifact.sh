@@ -23,7 +23,7 @@ mkdir -p "$DEST"
 cp -a "$ROOT/app/compose" "$DEST/compose"
 cp -a "$ROOT/app/django-sar-portal" "$DEST/django-sar-portal"
 cp -a "$ROOT/app/keycloak" "$DEST/keycloak"
-cp -a "$ROOT/contracts" "$DEST/contracts"
+cp -a "$ROOT/project-deployments/project-a/lambda/contracts" "$DEST/contracts"
 
 find "$DEST" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
 find "$DEST" -type d -name '.venv' -prune -exec rm -rf {} + 2>/dev/null || true

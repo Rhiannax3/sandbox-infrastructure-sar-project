@@ -225,7 +225,7 @@ Use when you change Django, Caddy, Keycloak realm, or Compose files and need the
 ./app/compose/redeploy.sh alex i-0abc123def456 eu-west-2
 ```
 
-What it does: stages app+contracts (no local Docker), uploads `s3://sar-<id>-artifacts-<account>/app/app.zip`, then SSM runs `docker compose up -d --build` on the host. Watch the script’s final SSM stdout for build errors.
+What it does: stages the portal stack plus schemas from `project-deployments/project-a/lambda/contracts` (no local Docker), uploads `s3://sar-<id>-artifacts-<account>/app/app.zip`, then SSM runs `docker compose up -d --build` on the host. Watch the script’s final SSM stdout for build errors.
 
 If you only changed the Caddyfile on the host for a hotfix: `docker exec compose-caddy-1 caddy reload --config /etc/caddy/Caddyfile` (or restart `compose-caddy-1`).
 

@@ -157,7 +157,12 @@ SAR_API_AUTH_ENABLED = env_bool("SAR_API_AUTH_ENABLED", False)
 SAR_API_BASE_URL_OVERRIDE = env("SAR_API_BASE_URL", "")
 SSM_API_BASE_URL_PARAM = f"/sar-sandbox/{ENGINEER_ID}/api-base-url"
 
-CONTRACTS_DIR = Path(env("CONTRACTS_DIR", str(BASE_DIR.parent.parent / "contracts")))
+CONTRACTS_DIR = Path(
+    env(
+        "CONTRACTS_DIR",
+        str(BASE_DIR.parent.parent / "project-deployments" / "project-a" / "lambda" / "contracts"),
+    )
+)
 if not CONTRACTS_DIR.exists():
     CONTRACTS_DIR = Path("/contracts")
 

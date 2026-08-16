@@ -33,8 +33,9 @@ services:
       SAR_API_BASE_URL: ${SAR_API_BASE_URL:-}
       CONTRACTS_DIR: /contracts
     volumes:
-      # Default ../contracts suits the EC2 artifact layout. For local compose from
-      # this repo, set CONTRACTS_HOST_PATH=../../../contracts in app/compose/.env
+      # Default ../contracts suits the EC2 artifact (staged from
+      # project-deployments/project-a/lambda/contracts). For local compose from this repo,
+      # set CONTRACTS_HOST_PATH in app/compose/.env (see .env.example).
       - ${CONTRACTS_HOST_PATH:-../contracts}:/contracts:ro
       - django_data:/app/data
     command: >

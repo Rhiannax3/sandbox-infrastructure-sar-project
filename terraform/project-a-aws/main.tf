@@ -118,7 +118,7 @@ resource "random_password" "oidc_client_secret" {
 
 # ---------------------------------------------------------------------------
 # App artifact bucket + upload
-# Source is staged from the repo (compose + Django + Keycloak + contracts).
+# Source is staged from the repo (compose + Django + Keycloak + project-deployments/project-a/lambda/contracts).
 # Docker image builds run on the EC2 host — no local Docker required.
 # ---------------------------------------------------------------------------
 

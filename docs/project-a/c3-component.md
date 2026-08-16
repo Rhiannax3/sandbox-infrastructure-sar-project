@@ -19,7 +19,7 @@ flowchart TB
     errors["Component — Phase 4<br/>Error mapper<br/><i>Exceptions to HTTP status and JSON body</i>"]
   end
 
-  contracts["External — contracts/<br/><i>Shared JSON Schemas</i>"]
+  contracts["External — project-deployments/project-a/lambda/contracts/<br/><i>Shared JSON Schemas</i>"]
 
   apigw --> router
   authorizer -.->|"Already enforced at edge"| router

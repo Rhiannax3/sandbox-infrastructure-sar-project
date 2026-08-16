@@ -14,7 +14,8 @@ Related docs you will use along the way:
 | [SAR request exercises](./sar_request_exercises.md) | Phased delivery plan (Phases 1–4) |
 | [C4 skeleton](./c4-skeleton.md) | Phase 1 diagrams; update in Phase 2+ |
 | [C1–C4 targets](./c1-system-context.md) | Mentor reference diagrams |
-| [`contracts/`](../../contracts/) | Phase 2 validation |
+| [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/) | Phase 2 validation |
+| [Lambda deploy folder](../../project-deployments/project-a/README.md) | Edit and publish function code |
 | [Portal API client](../../app/django-sar-portal/sar/services/sar_api.py) | Expected HTTP paths |
 | [Architecture overview](../architecture.md) | Big picture / build boundary |
 | [Keycloak realm notes](../../app/keycloak/README.md) | Roles, clients, scopes |
@@ -118,7 +119,7 @@ Stay in the region your mentor used (typically `eu-west-2`).
 | **IAM Lambda execution role**   | `lambda_execution_role_arn` — attach to every function                            |
 | **IAM junior developer policy** | Lets you create `sar-<you>-`* resources (mentor attaches it)                      |
 | **SSM parameter**               | `/sar-sandbox/<you>/api-base-url` — you publish your API base URL here            |
-| **JSON Schema contracts**       | `[contracts/](../../contracts/)` — shared by portal forms and your API validation |
+| **JSON Schema contracts**       | [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/) — shared by portal forms and your API validation |
 | **Optional log archive bucket** | For CloudWatch export experiments; not required to finish Project A               |
 
 
@@ -126,7 +127,7 @@ Stay in the region your mentor used (typically `eu-west-2`).
 
 ### What you will build
 
-- AWS Lambda function(s) — business logic  
+- AWS Lambda function(s) — put code in [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) and publish with `./publish.sh`  
 - API Gateway — HTTP front door to Lambda  
 - DynamoDB table(s) — persistent SAR request state  
 - JWT authorizer / scope checks — Phase 3 security  
@@ -247,7 +248,7 @@ OIDC login is configured. In Phase 3 the portal can send the officer’s access 
 
 ### 4.5 Contracts
 
-Validate write bodies using [`contracts/`](../../contracts/):
+Validate write bodies using [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/):
 
 - Envelope: `sar-request-envelope.schema.json`
 - Payload by `document_type`: matching `user-*.schema.json`
@@ -271,7 +272,7 @@ Before you start [Phase 1 in the exercises](./sar_request_exercises.md):
 2. [ ] Junior developer policy is attached to **your** IAM principal.
 3. [ ] You can open `portal_url`, log in as `officer.standard` / `Password123!`, and see the home page (API may still say `mock`).
 4. [ ] AWS CLI works: `aws sts get-caller-identity`.
-5. [ ] You can read this repo’s `contracts/` folder and the portal client linked above.
+5. [ ] You can read this repo’s [`project-deployments/project-a/`](../../project-deployments/project-a/) folder (Lambda stub + `lambda/contracts/`) and the portal client linked above.
 6. [ ] You have skimmed the [C4 skeleton](./c4-skeleton.md).
 
 ---
@@ -307,7 +308,7 @@ Work through the phases in **[SAR request exercises](./sar_request_exercises.md)
 | `403 Forbidden` from API / portal health      | REST API: did SSM include the **stage** (`…/Default`)? Auth still `NONE` on `/health` until Phase 3? Wrong base URL? |
 | `AccessDenied` creating AWS resources         | Name starts with `sar-<you>-`? Junior policy attached to your principal? Lambda using `lambda_execution_role_arn`?   |
 | Portal login fails / loops                    | Use portal login, not Keycloak admin. Escalate PKCE / redirect URI issues to mentor.                                 |
-| Validation always fails                       | Compare portal JSON to `contracts/`; check `document_type`.                                                          |
+| Validation always fails                       | Compare portal JSON to `project-deployments/project-a/lambda/contracts/`; check `document_type`.                                |
 | 401/403 after Phase 3 with portal logged in   | Mentor set `SAR_API_AUTH_ENABLED=true`? Token audience `sar-api`? Issuer host correct?                               |
 | Host / portal unreachable                     | Instance auto-stopped? Ask mentor to start it.                                                                       |
 
