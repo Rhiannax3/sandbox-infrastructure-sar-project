@@ -40,6 +40,18 @@ resource "aws_iam_policy" "junior_boundary" {
           "ssm:GetParameter*",
           "ssm:PutParameter",
           "ssm:DeleteParameter",
+          "ssm:SendCommand",
+          "ssm:GetCommandInvocation",
+          "ssm:ListCommands",
+          "ssm:ListCommandInvocations",
+          "ssm:StartSession",
+          "ssm:TerminateSession",
+          "ssm:ResumeSession",
+          "ssm:DescribeInstanceInformation",
+          "ssm:DescribeSessions",
+          "ssm:GetConnectionStatus",
+          "ec2:DescribeInstances",
+          "ec2:DescribeTags",
           "iam:PassRole",
           "iam:GetRole",
           "iam:GetRolePolicy",
@@ -230,6 +242,58 @@ resource "aws_iam_policy" "junior_developer" {
         Sid      = "ReadIamRoles"
         Effect   = "Allow"
         Action   = ["iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:ListRoles"]
+        Resource = "*"
+      },
+      {
+        Sid      = "LambdaSourceBucket"
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:AbortMultipartUpload"]
+        Resource = "arn:aws:s3:::${var.name_prefix}-artifacts-*/lambda/*"
+      },
+      {
+        Sid      = "LambdaSourceBucketList"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = "arn:aws:s3:::${var.name_prefix}-artifacts-*"
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["lambda", "lambda/*"]
+          }
+        }
+      },
+      {
+        Sid      = "FindOwnSandboxHost"
+        Effect   = "Allow"
+        Action   = ["ec2:DescribeInstances", "ec2:DescribeTags"]
+        Resource = "*"
+      },
+      {
+        Sid      = "SsmSendCommandDocument"
+        Effect   = "Allow"
+        Action   = ["ssm:SendCommand"]
+        Resource = "arn:aws:ssm:${data.aws_region.current.region}::document/AWS-RunShellScript"
+      },
+      {
+        Sid      = "SsmSendCommandOwnHost"
+        Effect   = "Allow"
+        Action   = ["ssm:SendCommand"]
+        Resource = "arn:aws:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:instance/*"
+        Condition = {
+          StringEquals = {
+            "ssm:resourceTag/Engineer" = var.engineer_id
+          }
+        }
+      },
+      {
+        Sid      = "SsmReadCommandResults"
+        Effect   = "Allow"
+        Action   = ["ssm:GetCommandInvocation", "ssm:ListCommands", "ssm:ListCommandInvocations"]
+        Resource = "*"
+      },
+      {
+        Sid      = "SsmSessionOnOwnHost"
+        Effect   = "Allow"
+        Action   = ["ssm:StartSession", "ssm:TerminateSession", "ssm:ResumeSession", "ssm:DescribeSessions", "ssm:GetConnectionStatus", "ssm:DescribeInstanceInformation"]
         Resource = "*"
       }
     ]

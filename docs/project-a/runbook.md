@@ -105,6 +105,7 @@ Your mentor provisions a dedicated AWS sandbox just for you (`engineer_id` = you
 | `lambda_execution_role_arn`   | Attach to **every** Lambda you create                                            |
 | `junior_developer_policy_arn` | Mentor attaches this to **your** IAM user/role                                   |
 | `api_base_url_parameter`      | Exact SSM name for your API base URL (usually `/sar-sandbox/<you>/api-base-url`) |
+| `instance_id`                 | Mentor can share this; `publish.sh` can also look up `sar-<you>-sandbox-host`   |
 
 
 Stay in the region your mentor used (typically `eu-west-2`).
@@ -127,7 +128,7 @@ Stay in the region your mentor used (typically `eu-west-2`).
 
 ### What you will build
 
-- AWS Lambda function(s) — put code in [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) and publish with `./publish.sh`  
+- AWS Lambda function(s) — put code in [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) and publish with `ENGINEER_ID=<you> ./publish.sh` (pip runs on the EC2 host)  
 - API Gateway — HTTP front door to Lambda  
 - DynamoDB table(s) — persistent SAR request state  
 - JWT authorizer / scope checks — Phase 3 security  

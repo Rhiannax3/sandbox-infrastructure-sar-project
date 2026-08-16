@@ -136,6 +136,16 @@ resource "aws_iam_role_policy" "sandbox_host" {
         Effect   = "Allow"
         Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "*"
+      },
+      {
+        Sid    = "PublishEngineerLambda"
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:GetFunction",
+          "lambda:GetFunctionConfiguration"
+        ]
+        Resource = "arn:aws:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:${var.name_prefix}-*"
       }
     ]
   })
@@ -168,7 +178,7 @@ locals {
     exec > >(tee /var/log/sar-bootstrap.log) 2>&1
 
     dnf update -y
-    dnf install -y docker jq awscli unzip
+    dnf install -y docker jq awscli unzip python3-pip zip tar
     systemctl enable --now docker
     usermod -aG docker ec2-user
 

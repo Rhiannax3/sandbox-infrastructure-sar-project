@@ -2,7 +2,7 @@
 
 Work on your AWS Lambda here. The portal and your function share the JSON Schema files in [`lambda/contracts/`](./lambda/contracts/).
 
-Do **not** write Lambda code on the EC2 sandbox host (`/opt/sar-sandbox`). That tree is the provided Django/Keycloak stack. Develop in this directory on your laptop, then publish the zip to AWS.
+Do **not** rebuild the Django/Keycloak stack on the EC2 host. Edit Lambda source in this folder on your laptop (no local Python needed). Publishing installs `jsonschema` **on the sandbox host** and then calls `aws lambda update-function-code`.
 
 ## Layout
 
@@ -29,7 +29,7 @@ body = enrich_for_create(parse_body(event))
 validate_request(body)
 ```
 
-Invalid contracts raise `ContractError`; call `exc.to_response()` for a 400 JSON body. Extra modules you add (`repository.py`, …) stay **gitignored**; `publish.sh` still zips whatever is on disk.
+Invalid contracts raise `ContractError`; call `exc.to_response()` for a 400 JSON body. Extra modules you add (`repository.py`, …) stay **gitignored**; the host still zips whatever you uploaded.
 
 ## Write your function
 
@@ -42,22 +42,26 @@ Invalid contracts raise `ContractError`; call `exc.to_response()` for a 400 JSON
 
 ## Publish
 
-From a machine with the AWS CLI and the junior developer policy (not an SSM session on the sandbox host):
+`jsonschema` is installed on the **sandbox EC2 host** (it has Python). Your laptop only needs the AWS CLI, `tar`, and `ENGINEER_ID`.
 
 ```bash
 cd project-deployments/project-a/lambda
-./publish.sh sar-<you>-lambda          # region defaults to eu-west-2
-# ./publish.sh sar-<you>-lambda eu-west-2
+# copy the example first if you have not already:
+#   cp example_lambda_function.py lambda_function.py
+ENGINEER_ID=<you> ./publish.sh sar-<you>-lambda          # region defaults to eu-west-2
+# ENGINEER_ID=<you> ./publish.sh sar-<you>-lambda eu-west-2
 ```
 
-The script installs `requirements.txt` into a gitignored `.build/` directory, zips **python files + `contracts/` + dependencies**, and runs `aws lambda update-function-code`. Confirm with:
+That command tars this directory (no `pip` on your machine), uploads it to `s3://sar-<you>-artifacts-…/lambda/src.tar.gz`, and SSM-runs packaging on the host. The instance role is allowed to call `lambda:UpdateFunctionCode` for `sar-<you>-*` functions.
+
+If you are already in a Session Manager shell on the host:
 
 ```bash
-aws sts get-caller-identity
-# should not be the EC2 instance role sar-<you>-sandbox-host
+cd /opt/sar-sandbox/lambda
+./publish.sh sar-<you>-lambda
 ```
 
-After a schema change, publish again so the function zip matches the portal.
+Ask your mentor to apply the Project A Terraform so the host role and junior policy include the publish permissions, and to start the instance if it auto-stopped. After a schema change, publish again so the zip matches the portal.
 
 ## Lambda console
 

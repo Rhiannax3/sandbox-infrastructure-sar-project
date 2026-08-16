@@ -11,7 +11,7 @@ Phased delivery plan for the AWS API & Document Request System. Read the environ
 **Your Goals:**
 
 1. Complete the Context and Container diagrams in the [C4 skeleton](./c4-skeleton.md).
-2. Write a simple Python Lambda named `sar-<you>-hello` and attach `lambda_execution_role_arn`. You can develop and publish it from [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) (`./publish.sh sar-<you>-hello`).
+2. Write a simple Python Lambda named `sar-<you>-hello` and attach `lambda_execution_role_arn`. Develop under [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) and publish with `ENGINEER_ID=<you> ./publish.sh sar-<you>-hello` (packaging runs on the sandbox host).
 3. Create an API Gateway with `GET /health` pointing to your Lambda. Return JSON like `{"status":"ok","message":"Hello from <you>"}`.
 4. Save the API **base URL** (include REST **stage** if applicable — see [runbook §4.1](./runbook.md#41-portal--your-api-ssm)) into SSM `/sar-sandbox/<you>/api-base-url`.
 5. Confirm `curl "$URL/health"` returns 200, then ask your mentor to flip the portal to `SAR_API_MODE=live` and recreate Django.
@@ -119,14 +119,14 @@ project-deployments/project-a/lambda/
 
 1. Copy `example_lambda_function.py` to `lambda_function.py` and replace the stub. Import the provided `validate.py` (`from validate import parse_body, validate_request, ContractError`). Add other sibling modules as needed; parent-directory imports do not work.
 2. Enrich POST bodies with `request_id` / `created_at` / `status`, then `validate_request` (payload schema by `document_type`, then the envelope). Invalid bodies → 4xx via `ContractError.to_response()`.
-3. From a laptop/CI identity (not the EC2 instance role):
+3. From a laptop with the AWS CLI (`tar` is enough; you do **not** need local Python/`pip`):
 
 ```bash
 cd project-deployments/project-a/lambda
-./publish.sh sar-<you>-lambda          # optional second arg: region (default eu-west-2)
+ENGINEER_ID=<you> ./publish.sh sar-<you>-lambda          # optional second arg: region (default eu-west-2)
 ```
 
-Full steps, console notes, and why not to deploy from SSM on the host: [`project-deployments/project-a/README.md`](../../project-deployments/project-a/README.md).
+The script ships source to your sandbox host, which installs `requirements.txt` and runs `update-function-code`. Full steps: [`project-deployments/project-a/README.md`](../../project-deployments/project-a/README.md).
 
 **Schema changes:** edit `lambda/contracts/` once, then publish again so the zip matches the portal. Do not invent inline Python dicts as a second source of truth.
 

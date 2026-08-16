@@ -225,7 +225,9 @@ Use when you change Django, Caddy, Keycloak realm, or Compose files and need the
 ./app/compose/redeploy.sh alex i-0abc123def456 eu-west-2
 ```
 
-What it does: stages the portal stack plus schemas from `project-deployments/project-a/lambda/contracts` (no local Docker), uploads `s3://sar-<id>-artifacts-<account>/app/app.zip`, then SSM runs `docker compose up -d --build` on the host. Watch the script’s final SSM stdout for build errors.
+What it does: stages the portal stack plus schemas from `project-deployments/project-a/lambda/contracts` and the Lambda publish tree (no local Docker), uploads `s3://sar-<id>-artifacts-<account>/app/app.zip`, then SSM runs `docker compose up -d --build` on the host. Watch the script’s final SSM stdout for build errors.
+
+Juniors publish Lambda zips **from the host** (`ENGINEER_ID=<id> ./publish.sh`). After changing host IAM or junior policy, `terraform apply` the Project A stack so `lambda:UpdateFunctionCode` is on the instance role. Existing hosts pick up `python3-pip` automatically the first time `publish.sh` runs (`sudo dnf install`).
 
 If you only changed the Caddyfile on the host for a hotfix: `docker exec compose-caddy-1 caddy reload --config /etc/caddy/Caddyfile` (or restart `compose-caddy-1`).
 
