@@ -24,13 +24,13 @@ Add extra modules next to the handler (`validate.py`, `repository.py`, …). Imp
 from validate import validate_request
 ```
 
-Those files must live **in this folder** (they unzip to `/var/task`). You cannot import from a parent directory or from the EC2 host.
+Those files must live **in this folder** (they unzip to `/var/task`). You cannot import from a parent directory or from the EC2 host. Extra modules and build artefacts are **gitignored** so they stay out of this repo; `publish.sh` still zips whatever is on disk.
 
 ## Write your function
 
 1. Create the Lambda in AWS first (`sar-<you>-…`) and attach `lambda_execution_role_arn` from your mentor.
 2. Set the handler to `lambda_function.lambda_handler` (Runtime settings).
-3. Edit `lambda/lambda_function.py` (and any extra `.py` files) in git.
+3. Edit `lambda/lambda_function.py` (and any extra `.py` files). Extra files are not committed to this repository.
 4. Keep validating against `lambda/contracts/` — same files the portal mounts. Do not fork a second copy of the schemas.
 
 Runtime schema path (works in `/var/task` after you publish):

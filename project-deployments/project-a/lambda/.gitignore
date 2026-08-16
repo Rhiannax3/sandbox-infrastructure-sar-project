@@ -1,2 +1,8 @@
-.build/
-function.zip
+# Ignore junior-built modules, zips, and pip installs. Keep the programme templates.
+*
+!.gitignore
+!publish.sh
+!requirements.txt
+!lambda_function.py
+!contracts/
+!contracts/**
