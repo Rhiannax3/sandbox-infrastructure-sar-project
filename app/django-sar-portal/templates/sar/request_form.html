@@ -1,67 +1,140 @@
 {% extends "base.html" %}
 {% load sar_extras %}
-{% block title %}Create {{ document_type|document_type_label }} — SAR Portal{% endblock %}
+{% block title %}{% if mode == "edit" %}Edit{% else %}New{% endif %} {{ document_type|document_type_label }} — SAR Compliance Portal{% endblock %}
 {% block content %}
+<div class="page-head">
+  <div>
+    <h1>{% if mode == "edit" %}Edit{% else %}New{% endif %} {{ document_type|document_type_label }}</h1>
+    <p class="lede">
+      {% if mode == "edit" %}
+        Update the subject, status, and document payload, then save.
+      {% else %}
+        Complete the subject, priority, and document-specific fields. Required items are marked.
+      {% endif %}
+    </p>
+  </div>
+  {% if mode == "edit" %}
+    <a class="btn secondary" href="{% url 'request_detail' item.request_id %}">Back To Request</a>
+  {% else %}
+    <a class="btn secondary" href="{% url 'request_create' %}">Change Type</a>
+  {% endif %}
+</div>
+
 <div class="panel">
-  <h1>New {{ document_type|document_type_label }} request</h1>
-  <p class="muted">Fields are driven by <code>project-deployments/project-a/lambda/contracts/</code> JSON Schema. Your Lambda should validate the same contracts.</p>
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="document_type" value="{{ document_type }}">
 
-    <h2>Subject</h2>
-    <label for="subject_id">Subject ID</label>
-    <input id="subject_id" name="subject_id" required placeholder="SUBJ-12345">
-    <label for="subject_email">Subject email</label>
-    <input id="subject_email" name="subject_email" type="email" required placeholder="subject@example.com">
-    <label for="subject_display_name">Display name</label>
-    <input id="subject_display_name" name="subject_display_name">
-
-    <h2>Request metadata</h2>
-    <label for="priority">Priority</label>
-    <select id="priority" name="priority">
-      {% for value, label in priorities %}
-        <option value="{{ value }}" {% if value == "Medium" %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-    <label for="officer_id">Your officer ID</label>
-    <input id="officer_id" name="officer_id" value="OFF-001">
-    <label for="notes">Notes</label>
-    <textarea id="notes" name="notes" rows="3"></textarea>
-
-    <h2>Document payload</h2>
-    {% for field in field_defs %}
-      {% if field.type == "boolean" %}
-        <div class="checkbox-row">
-          <input type="checkbox" id="{{ field.name }}" name="{{ field.name }}" {% if field.default %}checked{% endif %}>
-          <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
+    <fieldset class="fieldset">
+      <legend>Data Subject</legend>
+      <div class="form-grid">
+        <div>
+          <label for="subject_id">Subject ID</label>
+          <input id="subject_id" name="subject_id" required placeholder="SUBJ-12345" autocomplete="off"
+                 value="{{ subject.subject_id|default:'' }}">
         </div>
-      {% elif field.enum and not field.items %}
-        <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
-        <select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}>
-          {% for opt in field.enum %}
-            <option value="{{ opt }}">{{ opt|enum_label }}</option>
-          {% endfor %}
-        </select>
-      {% elif field.items %}
-        <label>{{ field.title }}{% if field.required %} *{% endif %}</label>
-        {% for opt in field.items.enum %}
-          <div class="checkbox-row">
-            <input type="checkbox" id="{{ field.name }}_{{ opt|slugify }}" name="{{ field.name }}" value="{{ opt }}">
-            <label for="{{ field.name }}_{{ opt|slugify }}">{{ opt|enum_label }}</label>
-          </div>
-        {% endfor %}
-      {% else %}
-        <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
-        <input id="{{ field.name }}" name="{{ field.name }}"
-               type="{% if field.format == 'date' %}date{% elif field.format == 'email' %}email{% else %}text{% endif %}"
-               {% if field.required %}required{% endif %}
-               placeholder="{{ field.description }}">
-      {% endif %}
-      {% if field.description %}<p class="muted" style="margin:0.15rem 0 0.5rem;font-size:0.8rem;">{{ field.description }}</p>{% endif %}
-    {% endfor %}
+        <div>
+          <label for="subject_email">Email</label>
+          <input id="subject_email" name="subject_email" type="email" required placeholder="subject@example.com"
+                 value="{{ subject.email|default:'' }}">
+        </div>
+        <div class="full">
+          <label for="subject_display_name">Display Name</label>
+          <input id="subject_display_name" name="subject_display_name" placeholder="Optional"
+                 value="{{ subject.display_name|default:'' }}">
+        </div>
+      </div>
+    </fieldset>
 
-    <button type="submit">Submit request</button>
+    <fieldset class="fieldset">
+      <legend>Request Details</legend>
+      <div class="form-grid">
+        <div>
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority">
+            {% for value, label in priorities %}
+              <option value="{{ value }}" {% if item.priority == value or not item.priority and value == "Medium" %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if mode == "edit" %}
+        <div>
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            {% for value, label in statuses %}
+              <option value="{{ value }}" {% if item.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+        <div>
+          <label for="officer_id">Officer ID</label>
+          <input id="officer_id" name="officer_id" value="{{ requestor.officer_id|default:'OFF-001' }}">
+        </div>
+        <div class="full">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Context for the retrieving team">{{ item.notes|default:'' }}</textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="fieldset">
+      <legend>Document Payload</legend>
+      <div class="form-grid">
+        {% for field in field_defs %}
+          {% if field.type == "boolean" %}
+            <div class="full">
+              <div class="checkbox-row">
+                <input type="checkbox" id="{{ field.name }}" name="{{ field.name }}"
+                       {% if field.value %}checked{% elif mode != "edit" and field.default %}checked{% endif %}>
+                <label for="{{ field.name }}">{{ field.title }}{% if field.required %} <span class="muted">required</span>{% endif %}</label>
+              </div>
+              {% if field.description %}<p class="hint">{{ field.description }}</p>{% endif %}
+            </div>
+          {% elif field.enum and not field.items %}
+            <div>
+              <label for="{{ field.name }}">{{ field.title }}{% if field.required %} <span class="muted">required</span>{% endif %}</label>
+              <select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}>
+                {% for opt in field.enum %}
+                  <option value="{{ opt }}" {% if field.value == opt %}selected{% endif %}>{{ opt|enum_label }}</option>
+                {% endfor %}
+              </select>
+              {% if field.description %}<p class="hint">{{ field.description }}</p>{% endif %}
+            </div>
+          {% elif field.items %}
+            <div class="full">
+              <label>{{ field.title }}{% if field.required %} <span class="muted">required</span>{% endif %}</label>
+              {% for opt in field.items.enum %}
+                <div class="checkbox-row">
+                  <input type="checkbox" id="{{ field.name }}_{{ opt|slugify }}" name="{{ field.name }}" value="{{ opt }}"
+                         {% if opt in field.value %}checked{% endif %}>
+                  <label for="{{ field.name }}_{{ opt|slugify }}">{{ opt|enum_label }}</label>
+                </div>
+              {% endfor %}
+              {% if field.description %}<p class="hint">{{ field.description }}</p>{% endif %}
+            </div>
+          {% else %}
+            <div>
+              <label for="{{ field.name }}">{{ field.title }}{% if field.required %} <span class="muted">required</span>{% endif %}</label>
+              <input id="{{ field.name }}" name="{{ field.name }}"
+                     type="{% if field.format == 'date' %}date{% elif field.format == 'email' %}email{% else %}text{% endif %}"
+                     {% if field.required %}required{% endif %}
+                     placeholder="{{ field.description }}"
+                     value="{{ field.value|default:'' }}">
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="button-row">
+      <button type="submit">{% if mode == "edit" %}Save Changes{% else %}Submit Request{% endif %}</button>
+      {% if mode == "edit" %}
+        <a class="btn secondary" href="{% url 'request_detail' item.request_id %}">Cancel</a>
+      {% else %}
+        <a class="btn secondary" href="{% url 'request_list' %}">Cancel</a>
+      {% endif %}
+    </div>
   </form>
 </div>
 {% endblock %}

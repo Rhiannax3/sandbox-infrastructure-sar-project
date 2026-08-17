@@ -15,6 +15,12 @@ DOCUMENT_SCHEMAS = {
     "user_consent_log": "user-consent-log.schema.json",
 }
 
+DOCUMENT_BLURBS = {
+    "user_profile_summary": "Contact details, employment history, and preference records held for a data subject.",
+    "user_activity_report": "Login, export, and account activity across a chosen date range.",
+    "user_consent_log": "Consent given or withdrawn for marketing, cookies, and related processing.",
+}
+
 
 def _contracts_dir() -> Path:
     return Path(settings.CONTRACTS_DIR)
@@ -58,9 +64,27 @@ def document_type_choices() -> list[tuple[str, str]]:
     return [(value, humanize_document_type(value)) for value in enum_values]
 
 
+def document_type_cards() -> list[dict]:
+    """Officer-facing cards for home and the create-type chooser."""
+    return [
+        {
+            "value": value,
+            "label": label,
+            "description": DOCUMENT_BLURBS.get(value, ""),
+        }
+        for value, label in document_type_choices()
+    ]
+
+
 def priority_choices() -> list[tuple[str, str]]:
     schema = envelope_schema()
     enum_values = schema["properties"]["priority"]["enum"]
+    return [(value, value) for value in enum_values]
+
+
+def status_choices() -> list[tuple[str, str]]:
+    schema = envelope_schema()
+    enum_values = schema["properties"]["status"]["enum"]
     return [(value, value) for value in enum_values]
 
 
@@ -84,3 +108,15 @@ def payload_field_defs(document_type: str) -> list[dict]:
             }
         )
     return fields
+
+
+def annotate_payload_values(field_defs: list[dict], payload: dict | None) -> list[dict]:
+    """Copy field defs and attach current payload values for the form."""
+    payload = payload or {}
+    annotated = []
+    for field in field_defs:
+        value = payload.get(field["name"])
+        if field.get("items"):
+            value = list(value or [])
+        annotated.append({**field, "value": value})
+    return annotated

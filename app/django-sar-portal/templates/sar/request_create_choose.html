@@ -1,12 +1,19 @@
 {% extends "base.html" %}
-{% block title %}New request — SAR Portal{% endblock %}
+{% block title %}New Request — SAR Compliance Portal{% endblock %}
 {% block content %}
-<div class="panel">
-  <h1>Choose document type</h1>
-  <ul>
-    {% for value, label in choices %}
-      <li><a href="?document_type={{ value }}">{{ label }}</a></li>
-    {% endfor %}
-  </ul>
+<div class="page-head">
+  <div>
+    <h1>New Request</h1>
+    <p class="lede">Select the document the data subject has asked for. The envelope is the same; only the payload changes.</p>
+  </div>
+</div>
+<div class="card-grid">
+  {% for card in choices %}
+    <a class="choice-card" href="?document_type={{ card.value }}">
+      <h2>{{ card.label }}</h2>
+      <p>{{ card.description }}</p>
+      <span class="card-cta">Continue →</span>
+    </a>
+  {% endfor %}
 </div>
 {% endblock %}

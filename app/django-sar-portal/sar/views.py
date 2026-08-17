@@ -31,7 +31,7 @@ def portal_home(request: HttpRequest) -> HttpResponse:
         {
             "health": health,
             "health_error": health_error,
-            "document_types": DOCUMENT_TYPES,
+            "document_cards": contracts.document_type_cards(),
         },
     )
 
@@ -55,7 +55,7 @@ def request_create(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "sar/request_create_choose.html",
-            {"choices": contracts.document_type_choices()},
+            {"choices": contracts.document_type_cards()},
         )
 
     field_defs = contracts.payload_field_defs(document_type)
@@ -74,9 +74,64 @@ def request_create(request: HttpRequest) -> HttpResponse:
         "sar/request_form.html",
         {
             "document_type": document_type,
-            "field_defs": field_defs,
+            "field_defs": contracts.annotate_payload_values(field_defs, None),
             "priorities": contracts.priority_choices(),
+            "statuses": contracts.status_choices(),
             "mode": "create",
+            "item": {},
+            "subject": {},
+            "requestor": {},
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def request_edit(request: HttpRequest, request_id: str) -> HttpResponse:
+    client = get_client(_access_token(request))
+    try:
+        item = client.get_request(request_id)
+    except SarApiError as exc:
+        messages.error(request, str(exc))
+        return redirect("request_list")
+
+    document_type = item.get("document_type")
+    if document_type not in DOCUMENT_TYPES:
+        messages.error(request, "This request has an unknown document type.")
+        return redirect("request_detail", request_id=request_id)
+
+    field_defs = contracts.payload_field_defs(document_type)
+    if request.method == "POST":
+        payload = _build_payload_from_post(request, document_type, field_defs)
+        payload["request_id"] = request_id
+        payload["status"] = request.POST.get("status") or item.get("status") or "Submitted"
+        if item.get("created_at"):
+            payload["created_at"] = item["created_at"]
+        try:
+            updated = client.update_request(request_id, payload)
+            rid = request_id
+            if isinstance(updated, dict) and updated.get("request_id"):
+                rid = updated["request_id"]
+            messages.success(request, f"Updated request {rid}")
+            return redirect("request_detail", request_id=rid)
+        except SarApiError as exc:
+            messages.error(request, f"Update failed ({exc.status_code}): {exc}")
+            item = {**item, **payload}
+
+    subject = item.get("subject") or {}
+    requestor = item.get("requestor") or {}
+    return render(
+        request,
+        "sar/request_form.html",
+        {
+            "document_type": document_type,
+            "field_defs": contracts.annotate_payload_values(field_defs, item.get("payload")),
+            "priorities": contracts.priority_choices(),
+            "statuses": contracts.status_choices(),
+            "mode": "edit",
+            "item": item,
+            "subject": subject,
+            "requestor": requestor,
         },
     )
 
