@@ -11,7 +11,7 @@ Related docs you will use along the way:
 
 | Doc | When |
 |-----|------|
-| [SAR request exercises](./sar_request_exercises.md) | Phased delivery plan (Phases 1–4) |
+| [SAR request exercises](./exercises/phased-exercises.md) | Phased delivery plan; links to the Phase 1–4 pages |
 | [C4 skeleton](./c4-skeleton.md) | Phase 1 diagrams; update in Phase 2+ |
 | [`project-deployments/project-a/lambda/contracts/`](../../../project-deployments/project-a/lambda/contracts/) | Phase 2 validation |
 | [Lambda deploy folder](../../../project-deployments/project-a/README.md) | Edit and publish function code |
@@ -267,7 +267,7 @@ The portal already builds forms from these schemas. Invalid bodies → clear **4
 
 ## 5. Getting Started Checklist
 
-Before you start [Phase 1 in the exercises](./sar_request_exercises.md):
+Before you start [Phase 1 in the exercises](./exercises/phase-1-foundation.md):
 
 1. [ ] Mentor has run `make apply-a ENGINEER=<you>` (or equivalent) and shared outputs.
 2. [ ] Junior developer policy is attached to **your** IAM principal.
@@ -282,7 +282,7 @@ Before you start [Phase 1 in the exercises](./sar_request_exercises.md):
 
 ## 6. Exercises (phased delivery)
 
-Work through the phases in **[SAR request exercises](./sar_request_exercises.md)** after completing the getting-started checklist above. That document covers Phase 1–4 (including Phase 2’s layered API → validation → DynamoDB → repository walkthrough).
+Work through the phases in **[SAR request exercises](./exercises/phased-exercises.md)** after completing the getting-started checklist above. That page summarises Phases 1–4 and links to each phase page (including [Phase 2](./exercises/phase-2-core-api.md)’s layered API → validation → DynamoDB → repository walkthrough).
 
 ## 7. Working with your mentor
 

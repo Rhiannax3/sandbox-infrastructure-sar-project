@@ -2,6 +2,7 @@
 
 - **[Platform administrator runbook](platform-admin/runbook.md)** — choose AWS and/or Azure track; credentials, install, deploy
 - [Project A — Engineer runbook](developer/project-a/runbook.md)
+- [Project A — SAR request exercises (Phases 1–4)](developer/project-a/exercises/phased-exercises.md)
 - [Project A — C4 modelling skeleton](developer/project-a/c4-skeleton.md)
 - [Project B — Engineer runbook](developer/project-b/runbook.md)
 - [Project B — Business questions (Gold/Platinum)](developer/project-b/business-questions.md)

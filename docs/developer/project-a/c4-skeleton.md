@@ -79,4 +79,4 @@ Sketch modules/classes inside the Lambda components (handler, routes, validation
 
 ## Deliverable
 
-Work the phases in [SAR request exercises](./sar_request_exercises.md). Submit Context + Container diagrams after Phase 1, an updated Component diagram after Phase 2, and optionally a Code sketch when your mentor asks for implementation detail.
+Work the phases in [SAR request exercises](./exercises/phased-exercises.md). Submit Context + Container diagrams after Phase 1, an updated Component diagram after Phase 2, and optionally a Code sketch when your mentor asks for implementation detail.

@@ -13,7 +13,7 @@ This repository provisions the **base infrastructure and boilerplate** that juni
 | **Platform admin** — Project A only | [Admin runbook §3 (AWS)](docs/platform-admin/runbook.md#3-project-a--aws-only) |
 | **Platform admin** — Project B only | [Admin runbook §4 (Azure)](docs/platform-admin/runbook.md#4-project-b--azure-only) |
 | **Platform admin** — full guide | [Platform administrator runbook](docs/platform-admin/runbook.md) |
-| Junior — Project A | [Runbook](docs/developer/project-a/runbook.md) · [Exercises](docs/developer/project-a/sar_request_exercises.md) · [Lambda folder](project-deployments/project-a/README.md) |
+| Junior — Project A | [Runbook](docs/developer/project-a/runbook.md) · [Exercises](docs/developer/project-a/exercises/phased-exercises.md) · [Lambda folder](project-deployments/project-a/README.md) |
 | Junior — Project B | [Project B runbook](docs/developer/project-b/runbook.md) |
 
 ## Projects
