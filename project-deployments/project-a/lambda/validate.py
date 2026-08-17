@@ -16,6 +16,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import ValidationError
 from referencing import Registry, Resource
+from logging_helpers import logger
 
 CONTRACTS_DIR = Path(__file__).resolve().parent / "contracts"
 ENVELOPE_FILE = "sar-request-envelope.schema.json"
@@ -80,6 +81,9 @@ def _error_item(exc: ValidationError) -> dict:
 def _validate(instance: dict, schema: dict) -> None:
     errors = [_error_item(err) for err in _validator(schema).iter_errors(instance)]
     if errors:
+        logger.error("Request body failed schema validation")
+        for error in errors:
+            logger.error("%s", error)
         raise ContractError("Request body failed schema validation", errors)
 
 

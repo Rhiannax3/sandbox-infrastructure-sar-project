@@ -14,17 +14,20 @@ project-deployments/
       example_lambda_function.py  ← template (copy this)
       lambda_function.py          ← your handler (gitignored)
       validate.py                 ← provided schema validation
+      logging_helpers.py          ← provided CloudWatch logger
       requirements.txt            ← third-party packages (e.g. jsonschema)
       publish.sh                  ← zip + aws lambda update-function-code
       contracts/                  ← shared schemas (portal + Lambda)
         *.schema.json
 ```
 
-Use the provided [`validate.py`](./lambda/validate.py) rather than rebuilding schema loading. After enriching a create body with `request_id` / `created_at` / `status`:
+Use the provided [`validate.py`](./lambda/validate.py) rather than rebuilding schema loading, and [`logging_helpers.py`](./lambda/logging_helpers.py) for CloudWatch output. After enriching a create body with `request_id` / `created_at` / `status`:
 
 ```python
+from logging_helpers import log_event, logger
 from validate import ContractError, parse_body, validate_request
 
+log_event(event)
 body = enrich_for_create(parse_body(event))
 validate_request(body)
 ```
@@ -35,7 +38,7 @@ Invalid contracts raise `ContractError`; call `exc.to_response()` for a 400 JSON
 
 1. Create the Lambda in AWS first (`sar-<you>-…`) and attach `lambda_execution_role_arn` from your mentor.
 2. Set the handler to `lambda_function.lambda_handler` (Runtime settings).
-3. Copy `example_lambda_function.py` to `lambda_function.py`, then edit that copy (and any extra `.py` files). Your copy and extra files are not committed to this repository. Import `validate.py` as-is.
+3. Copy `example_lambda_function.py` to `lambda_function.py`, then edit that copy (and any extra `.py` files). Your copy and extra files are not committed to this repository. Import `validate.py` and `logging_helpers.py` as-is.
 4. Keep validating against `lambda/contracts/` via `validate_request` — same files the portal mounts. Do not fork a second copy of the schemas.
 
 `validate.py` already maps `document_type` to those files. You only need to enrich then call `validate_request`.
@@ -65,7 +68,7 @@ Ask your mentor to apply the Project A Terraform so the host role and junior pol
 
 ## Lambda console
 
-The inline editor is optional for tiny stubs (package must stay under 3 MB unzipped). Prefer this directory + `publish.sh`. If you do use the console, copy `lambda_function.py`, `validate.py`, extra modules, and the `contracts/` folder into the function and click **Deploy**.
+The inline editor is optional for tiny stubs (package must stay under 3 MB unzipped). Prefer this directory + `publish.sh`. If you do use the console, copy `lambda_function.py`, `validate.py`, `logging_helpers.py`, extra modules, and the `contracts/` folder into the function and click **Deploy**.
 
 ## Alternatives (optional)
 

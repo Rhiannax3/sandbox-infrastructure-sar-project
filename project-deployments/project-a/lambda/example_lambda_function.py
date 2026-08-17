@@ -2,6 +2,7 @@
 
 Copy this file to lambda_function.py (gitignored) and replace the stub
 with your SAR Request API. Schema checks use the provided validate.py.
+CloudWatch logging uses the provided logging_helpers.py.
 
 Publish with:  ./publish.sh sar-<you>-lambda
 See ../README.md
@@ -13,6 +14,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 
+from logging_helpers import log_event
 from validate import ContractError, parse_body, validate_request
 
 
@@ -29,6 +31,7 @@ def enrich_for_create(body: dict) -> dict:
 
 
 def lambda_handler(event, context):
+    log_event(event)
     method = (event.get("httpMethod") or "").upper()
     if method in ("POST", "PUT"):
         try:

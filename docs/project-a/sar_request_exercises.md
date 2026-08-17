@@ -108,6 +108,7 @@ project-deployments/project-a/lambda/
   example_lambda_function.py  # template — copy to lambda_function.py
   lambda_function.py          # handler: lambda_function.lambda_handler (gitignored)
   validate.py                 # provided — envelope + payload schema checks
+  logging_helpers.py          # provided — CloudWatch logger (log_event / logger)
   requirements.txt
   publish.sh
   contracts/
@@ -117,7 +118,7 @@ project-deployments/project-a/lambda/
     user-consent-log.schema.json
 ```
 
-1. Copy `example_lambda_function.py` to `lambda_function.py` and replace the stub. Import the provided `validate.py` (`from validate import parse_body, validate_request, ContractError`). Add other sibling modules as needed; parent-directory imports do not work.
+1. Copy `example_lambda_function.py` to `lambda_function.py` and replace the stub. Import the provided `validate.py` (`from validate import parse_body, validate_request, ContractError`) and `logging_helpers.py` (`from logging_helpers import log_event, logger`). Add other sibling modules as needed; parent-directory imports do not work. Call `log_event(event)` at the start of the handler so CloudWatch shows the API Gateway payload (method, resource, `pathParameters`) rather than an empty or unstructured line.
 2. Enrich POST bodies with `request_id` / `created_at` / `status`, then `validate_request` (payload schema by `document_type`, then the envelope). Invalid bodies → 4xx via `ContractError.to_response()`.
 3. From a laptop with the AWS CLI (`tar` is enough; you do **not** need local Python/`pip`):
 
@@ -146,7 +147,8 @@ For Project A, prefer the zip in `project-deployments/project-a/lambda/` unless 
 2. **Library** — e.g. `jsonschema` in Python. How do you surface the first vs all validation errors to the officer-facing API?
 3. **Strictness** — Envelope has `additionalProperties: false`. Will you strip unknown fields or reject them? Rejecting matches the contract spirit.
 4. **Create vs update** — On create, do you require `request_id`/`created_at` from the client or set them server-side (and validate after enrichment)? Server-side enrichment then validate is a common pattern.
-5. **Read paths** — Do `GET`s re-validate stored items (catch old bad data) or trust the store? Usually trust the store; optionally log if a stored item fails schema.
+5. **Read paths** — Do `GET`s re-validate stored items (catch old bad data) or trust the store? Usually trust the store; optionally log if a stored item fails schema (`from logging_helpers import logger`).
+6. **CloudWatch** — Route requests through `log_event(event)` so logs show `httpMethod`, `resource`, and `pathParameters`. Do not rebuild a second logger.
 
 **Exit Layer B when:** Invalid bodies never reach a successful write; at least one deliberate bad payload demo returns 4xx; schemas are loaded from `project-deployments/project-a/lambda/contracts/` (not reinvented inline as Python dicts).
 
@@ -278,7 +280,7 @@ In cloud engineering, things *will* break. Databases time out, networks drop. Pr
 **Your Goals:**
 
 1. Introduce at least two controlled failure scenarios (examples: wrong DynamoDB table name, forced timeout, not-found vs validation vs conflict).
-2. Catch exceptions and return clean JSON errors like `{"error":"...","code":"..."}` with the correct HTTP status (400 / 401 / 403 / 404 / 409 / 500 / 503 as appropriate).
+2. Catch exceptions and return clean JSON errors like `{"error":"...","code":"..."}` with the correct HTTP status (400 / 401 / 403 / 404 / 409 / 500 / 503 as appropriate). Log failures with the provided `logging_helpers.logger` so CloudWatch shows the cause without dumping a stack into the HTTP body.
 3. Verify the portal shows a useful `SarApiError` / message instead of an opaque crash where you control the API.
 4. **Theory exercise:** Write a short paper (length defined by mentor) on **AWS Lambda intra-region availability**: what AWS provides out of the box, what you still design for (retries, idempotency, multi-AZ data), and what this sandbox does *not* prove (e.g. multi-region active-active).
 

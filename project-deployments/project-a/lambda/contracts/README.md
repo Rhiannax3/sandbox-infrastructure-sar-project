@@ -31,4 +31,4 @@ CONTRACTS = Path(__file__).resolve().parent / "contracts"
 | `user_activity_report` | `user-activity-report.schema.json` |
 | `user_consent_log` | `user-consent-log.schema.json` |
 
-Write handler code in [`..`](../). Import [`validate.py`](../validate.py) (`validate_request`, `parse_body`). Publish with `./publish.sh`. Full steps: [`project-a/README.md`](../../README.md).
+Write handler code in [`..`](../). Import [`validate.py`](../validate.py) (`validate_request`, `parse_body`) and [`logging_helpers.py`](../logging_helpers.py) (`log_event`, `logger`). Publish with `./publish.sh`. Full steps: [`project-a/README.md`](../../README.md).
