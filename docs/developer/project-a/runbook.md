@@ -13,12 +13,11 @@ Related docs you will use along the way:
 |-----|------|
 | [SAR request exercises](./sar_request_exercises.md) | Phased delivery plan (Phases 1–4) |
 | [C4 skeleton](./c4-skeleton.md) | Phase 1 diagrams; update in Phase 2+ |
-| [C1–C4 targets](./c1-system-context.md) | Mentor reference diagrams |
-| [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/) | Phase 2 validation |
-| [Lambda deploy folder](../../project-deployments/project-a/README.md) | Edit and publish function code |
-| [Portal API client](../../app/django-sar-portal/sar/services/sar_api.py) | Expected HTTP paths |
-| [Architecture overview](../architecture.md) | Big picture / build boundary |
-| [Keycloak realm notes](../../app/keycloak/README.md) | Roles, clients, scopes |
+| [`project-deployments/project-a/lambda/contracts/`](../../../project-deployments/project-a/lambda/contracts/) | Phase 2 validation |
+| [Lambda deploy folder](../../../project-deployments/project-a/README.md) | Edit and publish function code |
+| [Portal API client](../../../app/django-sar-portal/sar/services/sar_api.py) | Expected HTTP paths |
+| [Architecture overview](../../architecture.md) | Big picture / build boundary |
+| [Keycloak realm notes](../../../app/keycloak/README.md) | Roles, clients, scopes |
 
 
 ---
@@ -120,8 +119,8 @@ Stay in the region your mentor used (typically `eu-west-2`).
 | **IAM Lambda execution role**   | `lambda_execution_role_arn` — attach to every function                            |
 | **IAM junior developer policy** | Lets you create `sar-<you>-`* resources (mentor attaches it)                      |
 | **SSM parameter**               | `/sar-sandbox/<you>/api-base-url` — you publish your API base URL here            |
-| **JSON Schema contracts**       | [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/) — shared by portal forms and your API validation |
-| **Lambda helpers**              | [`validate.py`](../../project-deployments/project-a/lambda/validate.py) (schema checks) and [`logging_helpers.py`](../../project-deployments/project-a/lambda/logging_helpers.py) (CloudWatch `log_event` / `logger`) — import as-is; do not reimplement |
+| **JSON Schema contracts**       | [`project-deployments/project-a/lambda/contracts/`](../../../project-deployments/project-a/lambda/contracts/) — shared by portal forms and your API validation |
+| **Lambda helpers**              | [`validate.py`](../../../project-deployments/project-a/lambda/validate.py) (schema checks) and [`logging_helpers.py`](../../../project-deployments/project-a/lambda/logging_helpers.py) (CloudWatch `log_event` / `logger`) — import as-is; do not reimplement |
 | **Optional log archive bucket** | For CloudWatch export experiments; not required to finish Project A               |
 
 
@@ -129,7 +128,7 @@ Stay in the region your mentor used (typically `eu-west-2`).
 
 ### What you will build
 
-- AWS Lambda function(s) — put code in [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) and publish with `ENGINEER_ID=<you> ./publish.sh` (pip runs on the EC2 host)  
+- AWS Lambda function(s) — put code in [`project-deployments/project-a/lambda/`](../../../project-deployments/project-a/README.md) and publish with `ENGINEER_ID=<you> ./publish.sh` (pip runs on the EC2 host)  
 - API Gateway — HTTP front door to Lambda  
 - DynamoDB table(s) — persistent SAR request state  
 - JWT authorizer / scope checks — Phase 3 security  
@@ -222,7 +221,7 @@ On the portal home page after `live` mode:
 
 ### 4.2 Paths the portal expects
 
-The portal client is `[sar/services/sar_api.py](../../app/django-sar-portal/sar/services/sar_api.py)`. Keep these paths (or change the client **with mentor agreement** only):
+The portal client is `[sar/services/sar_api.py](../../../app/django-sar-portal/sar/services/sar_api.py)`. Keep these paths (or change the client **with mentor agreement** only):
 
 
 | Portal method              | HTTP (live mode)        |
@@ -250,12 +249,12 @@ OIDC login is configured. In Phase 3 the portal can send the officer’s access 
 
 ### 4.5 Contracts
 
-Validate write bodies using [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/):
+Validate write bodies using [`project-deployments/project-a/lambda/contracts/`](../../../project-deployments/project-a/lambda/contracts/):
 
 - Envelope: `sar-request-envelope.schema.json`
 - Payload by `document_type`: matching `user-*.schema.json`
 
-The portal already builds forms from these schemas. Invalid bodies → clear **4xx** (typically 400). Use [`logging_helpers.py`](../../project-deployments/project-a/lambda/logging_helpers.py) so validation and handler traces appear in CloudWatch (`from logging_helpers import log_event, logger`).
+The portal already builds forms from these schemas. Invalid bodies → clear **4xx** (typically 400). Use [`logging_helpers.py`](../../../project-deployments/project-a/lambda/logging_helpers.py) so validation and handler traces appear in CloudWatch (`from logging_helpers import log_event, logger`).
 
 ### 4.6 IAM
 
@@ -274,7 +273,7 @@ Before you start [Phase 1 in the exercises](./sar_request_exercises.md):
 2. [ ] Junior developer policy is attached to **your** IAM principal.
 3. [ ] You can open `portal_url`, log in as `officer.standard` / `Password123!`, and see the home page (API may still say `mock`).
 4. [ ] AWS CLI works: `aws sts get-caller-identity`.
-5. [ ] You can read this repo’s [`project-deployments/project-a/`](../../project-deployments/project-a/) folder (Lambda stub, `validate.py`, `logging_helpers.py`, `lambda/contracts/`) and the portal client linked above.
+5. [ ] You can read this repo’s [`project-deployments/project-a/`](../../../project-deployments/project-a/) folder (Lambda stub, `validate.py`, `logging_helpers.py`, `lambda/contracts/`) and the portal client linked above.
 6. [ ] You have skimmed the [C4 skeleton](./c4-skeleton.md).
 
 ---

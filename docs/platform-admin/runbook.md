@@ -210,7 +210,7 @@ Keycloak admin console (`/auth/admin/`, realm **master** initially): username `a
 2. Confirm Keycloak + portal login with `officer.standard` / `Password123!`.
 3. If you set `budget_alert_email`, confirm the budget exists in Billing → Budgets (`sar-<id>-monthly`). Activate the `Engineer` cost allocation tag if you want tag-filtered spend to show (can take up to ~24h).
 4. Note whether `enable_auto_stop` is on (default **true**): EventBridge will stop the instance on a schedule to save cost — start it again from EC2 when the junior needs it.
-5. Handoff to the junior: `portal_url`, `lambda_execution_role_arn`, `api_base_url_parameter`, and point them at [Project A engineer runbook](../project-a/runbook.md). Keep Keycloak admin credentials mentor-only.
+5. Handoff to the junior: `portal_url`, `lambda_execution_role_arn`, `api_base_url_parameter`, and point them at [Project A engineer runbook](../developer/project-a/runbook.md). Keep Keycloak admin credentials mentor-only.
 
 ### 3.4 Day-2 (AWS)
 
@@ -328,7 +328,7 @@ Access smoke test
 IAM + handoff
   [ ] junior_developer_policy_arn attached to their principal
   [ ] Shared with junior: portal_url, lambda_execution_role_arn,
-      api_base_url_parameter, link to docs/project-a/runbook.md
+      api_base_url_parameter, link to docs/developer/project-a/runbook.md
   [ ] Keycloak admin secret kept mentor-only
 
 Optional
@@ -443,7 +443,7 @@ Share: `databricks_workspace_url`, `catalog_name`, `landing_external_location`, 
 **Post-provision (Azure):**
 
 1. Add the junior’s Entra ID user to `sar-<id>-data-engineers`.
-2. Power BI licences/workspaces are **manual** — [power-bi.md](../project-b/power-bi.md).
+2. Power BI licences/workspaces are **manual** — [power-bi.md](../developer/project-b/power-bi.md).
 3. Confirm budget alerts if configured.
 
 ### 4.4 Day-2 (Azure)
@@ -507,6 +507,6 @@ Power BI licence (Phase 4):  [ ]  (optional / later)
 ## 7. Related docs
 
 - [Architecture overview](../architecture.md)
-- [Project A engineer runbook](../project-a/runbook.md)
-- [Project B engineer runbook](../project-b/runbook.md)
+- [Project A engineer runbook](../developer/project-a/runbook.md)
+- [Project B engineer runbook](../developer/project-b/runbook.md)
 - [Seed data anomaly map](../mentor/anomaly-map.md) (mentor only)

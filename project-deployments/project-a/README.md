@@ -78,4 +78,4 @@ The inline editor is optional for tiny stubs (package must stay under 3 MB unzip
 | **Lambda layer** | Sharing schemas across several functions |
 | **S3** | Update schemas without a code deploy (needs IAM + cache) |
 
-See Phase 2 Layer B in [`docs/project-a/sar_request_exercises.md`](../../docs/project-a/sar_request_exercises.md).
+See Phase 2 Layer B in [`docs/developer/project-a/sar_request_exercises.md`](../../docs/developer/project-a/sar_request_exercises.md).

@@ -11,7 +11,7 @@ Phased delivery plan for the AWS API & Document Request System. Read the environ
 **Your Goals:**
 
 1. Complete the Context and Container diagrams in the [C4 skeleton](./c4-skeleton.md).
-2. Write a simple Python Lambda named `sar-<you>-hello` and attach `lambda_execution_role_arn`. Develop under [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md) and publish with `ENGINEER_ID=<you> ./publish.sh sar-<you>-hello` (packaging runs on the sandbox host).
+2. Write a simple Python Lambda named `sar-<you>-hello` and attach `lambda_execution_role_arn`. Develop under [`project-deployments/project-a/lambda/`](../../../project-deployments/project-a/README.md) and publish with `ENGINEER_ID=<you> ./publish.sh sar-<you>-hello` (packaging runs on the sandbox host).
 3. Create an API Gateway with `GET /health` pointing to your Lambda. Return JSON like `{"status":"ok","message":"Hello from <you>"}`.
 4. Save the API **base URL** (include REST **stage** if applicable — see [runbook §4.1](./runbook.md#41-portal--your-api-ssm)) into SSM `/sar-sandbox/<you>/api-base-url`.
 5. Confirm `curl "$URL/health"` returns 200, then ask your mentor to flip the portal to `SAR_API_MODE=live` and recreate Django.
@@ -35,9 +35,9 @@ RESTful APIs use standard HTTP methods (`POST` to create, `GET` to read, `PUT` t
 
 AWS Lambda is **stateless** — when an invocation finishes, in-memory state is gone. Persistent SAR requests need an external store: **DynamoDB**.
 
-Bad input should fail fast. **JSON Schema contracts** in [`project-deployments/project-a/lambda/contracts/`](../../project-deployments/project-a/lambda/contracts/) define the envelope and per–document-type payloads. Validate before you write.
+Bad input should fail fast. **JSON Schema contracts** in [`project-deployments/project-a/lambda/contracts/`](../../../project-deployments/project-a/lambda/contracts/) define the envelope and per–document-type payloads. Validate before you write.
 
-Work this phase **one layer at a time**. At each layer, pause on the design decisions, note your choice for your mentor, then implement. Update your [C3 Component](./c3-component.md) diagram as the pieces appear (router → validator → repository).
+Work this phase **one layer at a time**. At each layer, pause on the design decisions, note your choice for your mentor, then implement. Update your **C3 Component** diagram as the pieces appear (router → validator → repository).
 
 **Shared rule for all layers:** there is **one** business resource — a **SAR request**. The three document types are `document_type` values on the same envelope; they change **payload validation**, not which URL family or table you must create.
 
@@ -99,7 +99,7 @@ Work this phase **one layer at a time**. At each layer, pause on the design deci
 
 ##### Sharing the data contracts with your Lambda
 
-Write your function in [`project-deployments/project-a/lambda/`](../../project-deployments/project-a/README.md). Schemas already sit next to the handler at `lambda/contracts/` (the same files the portal mounts). Publish that folder — do not keep a second, divergent copy of the schemas.
+Write your function in [`project-deployments/project-a/lambda/`](../../../project-deployments/project-a/README.md). Schemas already sit next to the handler at `lambda/contracts/` (the same files the portal mounts). Publish that folder — do not keep a second, divergent copy of the schemas.
 
 **Edit and publish from this repo layout**
 
@@ -127,7 +127,7 @@ cd project-deployments/project-a/lambda
 ENGINEER_ID=<you> ./publish.sh sar-<you>-lambda          # optional second arg: region (default eu-west-2)
 ```
 
-The script ships source to your sandbox host, which installs `requirements.txt` and runs `update-function-code`. Full steps: [`project-deployments/project-a/README.md`](../../project-deployments/project-a/README.md).
+The script ships source to your sandbox host, which installs `requirements.txt` and runs `update-function-code`. Full steps: [`project-deployments/project-a/README.md`](../../../project-deployments/project-a/README.md).
 
 **Schema changes:** edit `lambda/contracts/` once, then publish again so the zip matches the portal. Do not invent inline Python dicts as a second source of truth.
 
@@ -222,7 +222,7 @@ DynamoDB is **access-pattern driven**. Choose keys from how you read data, not f
 **Goal:** Prove the stack through the UI and keep architecture honest.
 
 1. Exercise **more than one** document type in the portal: create → list → open → edit → delete (`SAR_API_MODE=live`).
-2. Update your **C3 Component** diagram: router, validator, repository (+ error handling stubs are fine until Phase 4). Compare shape to the [C3 target](./c3-component.md).
+2. Update your **C3 Component** diagram: router, validator, repository (+ error handling stubs are fine until Phase 4). Walk the shape through with your mentor, who holds the target diagram.
 
 **You are done with Phase 2 when:**
 
