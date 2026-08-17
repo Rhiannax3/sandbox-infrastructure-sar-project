@@ -1,6 +1,8 @@
 # Documentation index
 
-- **[Platform administrator runbook](platform-admin/runbook.md)** — choose AWS and/or Azure track; credentials, install, deploy
+- **[Platform administrator runbook](platform-admin/runbook.md)** — summary of both tracks; start here to choose
+  - [Project A (AWS)](platform-admin/project-a-aws-runbook.md) — credentials, install, deploy, day-2, handoff
+  - [Project B (Azure)](platform-admin/project-b-azure-runbook.md) — credentials, install, deploy, day-2, handoff
 - [Project A — Engineer runbook](developer/project-a/runbook.md)
 - [Project A — SAR request exercises (Phases 1–4)](developer/project-a/exercises/phased-exercises.md)
 - [Project A — C4 modelling skeleton](developer/project-a/c4-skeleton.md)

@@ -10,9 +10,9 @@ This repository provisions the **base infrastructure and boilerplate** that juni
 
 | Role | Start here |
 |------|------------|
-| **Platform admin** — Project A only | [Admin runbook §3 (AWS)](docs/platform-admin/runbook.md#3-project-a--aws-only) |
-| **Platform admin** — Project B only | [Admin runbook §4 (Azure)](docs/platform-admin/runbook.md#4-project-b--azure-only) |
-| **Platform admin** — full guide | [Platform administrator runbook](docs/platform-admin/runbook.md) |
+| **Platform admin** — Project A only | [Project A (AWS) admin runbook](docs/platform-admin/project-a-aws-runbook.md) |
+| **Platform admin** — Project B only | [Project B (Azure) admin runbook](docs/platform-admin/project-b-azure-runbook.md) |
+| **Platform admin** — both tracks | [Platform administrator runbook summary](docs/platform-admin/runbook.md) |
 | Junior — Project A | [Runbook](docs/developer/project-a/runbook.md) · [Exercises](docs/developer/project-a/exercises/phased-exercises.md) · [Lambda folder](project-deployments/project-a/README.md) |
 | Junior — Project B | [Project B runbook](docs/developer/project-b/runbook.md) |
 
@@ -40,12 +40,12 @@ docs/
 
 ## Prerequisites (by track)
 
-Shared: Terraform `>= 1.9`, `make` — [Admin §2](docs/platform-admin/runbook.md#2-shared-tooling)
+Shared: Terraform `>= 1.9`, `make` — install steps are repeated in each admin runbook.
 
 | Track | Also install |
 |-------|----------------|
-| **AWS / Project A** | AWS CLI v2 (Docker runs on the EC2 host, not locally) — [Admin §3.1](docs/platform-admin/runbook.md#31-install-and-authenticate-aws) |
-| **Azure / Project B** | Azure CLI + Databricks account admin — [Admin §4.1](docs/platform-admin/runbook.md#41-install-and-authenticate-azure) |
+| **AWS / Project A** | AWS CLI v2 (Docker runs on the EC2 host, not locally) — [Project A admin runbook §1.2](docs/platform-admin/project-a-aws-runbook.md#12-aws-tooling) |
+| **Azure / Project B** | Azure CLI + Databricks account admin — [Project B admin runbook §1.2](docs/platform-admin/project-b-azure-runbook.md#12-azure-tooling) |
 
 ## Quick start
 
@@ -72,7 +72,7 @@ make apply-b ENGINEER=alex \
   ACCESS_CONNECTOR_PRINCIPAL_ID=...
 ```
 
-Full file lists, handoff checklists, and troubleshooting: **[docs/platform-admin/runbook.md](docs/platform-admin/runbook.md)**.
+Full file lists, handoff checklists, and troubleshooting: **[Project A (AWS)](docs/platform-admin/project-a-aws-runbook.md)** · **[Project B (Azure)](docs/platform-admin/project-b-azure-runbook.md)**.
 
 ## Isolation model
 

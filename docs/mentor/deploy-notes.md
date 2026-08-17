@@ -1,6 +1,6 @@
 # Mentor deploy notes
 
-Full steps: **[Platform administrator runbook](../platform-admin/runbook.md)**  
+Full steps: **[Project A (AWS)](../platform-admin/project-a-aws-runbook.md)** · **[Project B (Azure)](../platform-admin/project-b-azure-runbook.md)**  
 Projects are **independent** — run only the track the engineer needs.
 
 ## Project A only (AWS)
