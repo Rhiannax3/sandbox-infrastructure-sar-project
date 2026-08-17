@@ -22,13 +22,13 @@
       "items": {
         "type": "string",
         "enum": [
-          "login",
-          "logout",
-          "data_access",
-          "data_export",
-          "preference_change",
-          "password_reset",
-          "consent_change"
+          "Login",
+          "Logout",
+          "Data Access",
+          "Data Export",
+          "Preference Change",
+          "Password Reset",
+          "Consent Change"
         ]
       },
       "uniqueItems": true,
@@ -44,8 +44,8 @@
     },
     "aggregation": {
       "type": "string",
-      "enum": ["raw", "daily", "weekly"],
-      "default": "raw"
+      "enum": ["Raw", "Daily", "Weekly"],
+      "default": "Raw"
     }
   }
 }

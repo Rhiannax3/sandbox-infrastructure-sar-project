@@ -1,43 +1,55 @@
 {% extends "base.html" %}
-{% load sar_extras %}
-{% block title %}Home — SAR Portal{% endblock %}
+{% block title %}Home — SAR Compliance Portal{% endblock %}
 {% block content %}
-<div class="panel">
-  <h1>Subject Access Request portal</h1>
-  {% if sar_api_mode == "live" %}
-    <p class="muted">
-      Portal is in <strong>live</strong> mode — health and CRUD call the API base URL
-      from SSM <code>/sar-sandbox/{{ engineer_id }}/api-base-url</code>.
-    </p>
-  {% else %}
-    <p class="muted">
-      Portal is in <strong>mock</strong> mode. After Phase 1, publish your API Gateway
-      base URL to SSM (<code>/sar-sandbox/{{ engineer_id }}/api-base-url</code>) and ask
-      your mentor to set <code>SAR_API_MODE=live</code> on the sandbox host.
-    </p>
-  {% endif %}
-  {% if health %}
-    <p><strong>API health:</strong> {{ health.message|default:health.status }} <span class="badge {{ sar_api_mode }}">{{ health.mode|default:sar_api_mode }}</span></p>
-  {% elif health_error %}
-    <p><strong>API health:</strong>
-      <span class="error" style="display:inline-block;padding:0.5rem 0.75rem;border-radius:8px;background:#7f1d1d;">{{ health_error }}</span>
-    </p>
-  {% else %}
-    <p class="muted"><strong>API health:</strong> (no response)</p>
-  {% endif %}
-  {% if user.is_authenticated %}
-    <a class="btn" href="{% url 'request_create' %}">Create SAR request</a>
-    <a class="btn secondary" href="{% url 'request_list' %}">View requests</a>
-  {% else %}
-    <a class="btn" href="{% url 'oidc_authentication_init' %}">Login to continue</a>
-  {% endif %}
+<div class="hero-grid">
+  <section class="panel hero-copy">
+    <p class="kicker">Officer Workspace</p>
+    <h1>Subject Access Requests</h1>
+    <p class="lede">Create, track, and fulfil statutory SAR documents for data subjects. Choose a document type to open a structured request.</p>
+    <div class="actions">
+      {% if user.is_authenticated %}
+        <a class="btn" href="{% url 'request_create' %}">New Request</a>
+        <a class="btn secondary" href="{% url 'request_list' %}">View Requests</a>
+      {% else %}
+        <a class="btn" href="{% url 'oidc_authentication_init' %}">Sign In To Continue</a>
+      {% endif %}
+    </div>
+  </section>
+  <aside class="panel">
+    <h2 class="section-title">Service Status</h2>
+    {% if health %}
+      <p class="status-row">
+        <span class="status-dot" aria-hidden="true"></span>
+        <strong>{{ health.message|default:"Operational" }}</strong>
+      </p>
+      <p class="hint">Connected in {{ health.mode|default:sar_api_mode }} mode.</p>
+    {% elif health_error %}
+      <p class="status-row">
+        <span class="status-dot down" aria-hidden="true"></span>
+        <strong>Unavailable</strong>
+      </p>
+      <p class="hint">{{ health_error }}</p>
+    {% else %}
+      <p class="muted">No health response yet.</p>
+    {% endif %}
+  </aside>
 </div>
-<div class="panel">
-  <h2>Document types</h2>
-  <ul>
-    {% for dt in document_types %}
-      <li>{{ dt|document_type_label }}</li>
+
+<section>
+  <div class="page-head">
+    <div>
+      <h2 class="section-title" style="margin-bottom:0.25rem;">Document Types</h2>
+      <p class="lede">Each type uses a shared request envelope with a different payload.</p>
+    </div>
+  </div>
+  <div class="card-grid">
+    {% for card in document_cards %}
+      <a class="choice-card" href="{% if user.is_authenticated %}{% url 'request_create' %}?document_type={{ card.value }}{% else %}{% url 'oidc_authentication_init' %}{% endif %}">
+        <h3>{{ card.label }}</h3>
+        <p>{{ card.description }}</p>
+        <span class="card-cta">{% if user.is_authenticated %}Start Request{% else %}Sign In To Start{% endif %} →</span>
+      </a>
     {% endfor %}
-  </ul>
-</div>
+  </div>
+</section>
 {% endblock %}

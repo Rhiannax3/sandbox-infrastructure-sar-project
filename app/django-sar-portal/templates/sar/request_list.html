@@ -1,35 +1,49 @@
 {% extends "base.html" %}
 {% load sar_extras %}
-{% block title %}Requests — SAR Portal{% endblock %}
+{% block title %}Requests — SAR Compliance Portal{% endblock %}
 {% block content %}
-<div class="panel">
-  <h1>SAR requests</h1>
-  <a class="btn" href="{% url 'request_create' %}">New request</a>
+<div class="page-head">
+  <div>
+    <h1>Requests</h1>
+    <p class="lede">Open cases awaiting retrieval, review, or fulfilment.</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{% url 'request_create' %}">New Request</a>
+  </div>
+</div>
+
+<div class="panel table-wrap">
   {% if items %}
   <table>
     <thead>
       <tr>
-        <th>ID</th>
+        <th>Request</th>
         <th>Type</th>
         <th>Status</th>
         <th>Priority</th>
         <th>Created</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
       {% for item in items %}
       <tr>
-        <td><a href="{% url 'request_detail' item.request_id %}">{{ item.request_id|truncatechars:13 }}</a></td>
+        <td><a class="id-link" href="{% url 'request_detail' item.request_id %}">{{ item.request_id }}</a></td>
         <td>{{ item.document_type|document_type_label }}</td>
-        <td>{{ item.status }}</td>
-        <td>{{ item.priority }}</td>
-        <td>{{ item.created_at }}</td>
+        <td><span class="pill {{ item.status|status_class }}">{{ item.status }}</span></td>
+        <td><span class="pill {{ item.priority|priority_class }}">{{ item.priority }}</span></td>
+        <td>{{ item.created_at|iso_datetime }}</td>
+        <td><a href="{% url 'request_edit' item.request_id %}">Edit</a></td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-    <p class="muted">No requests yet.</p>
+  <div class="empty-state">
+    <h2>No Requests Yet</h2>
+    <p>When officers raise a SAR, it will appear here.</p>
+    <a class="btn" href="{% url 'request_create' %}">Create The First Request</a>
+  </div>
   {% endif %}
 </div>
 {% endblock %}

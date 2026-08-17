@@ -64,7 +64,7 @@
         },
         "role": {
           "type": "string",
-          "enum": ["standard_officer", "senior_officer"]
+          "enum": ["Standard Officer", "Senior Officer"]
         }
       }
     },

@@ -14,7 +14,7 @@ JSON Schema (draft 2020-12) definitions for Subject Access Request (SAR) payload
 1. **Django SAR portal** — renders create/edit forms from this folder (mounted on the EC2 host).
 2. **Engineer-built Lambda** — validates POST/PUT bodies. Schemas unzip next to the handler at `/var/task/contracts`.
 
-Do not change field names or enums without coordinating both consumers. Adding optional fields is preferred over breaking changes.
+Do not change field names or enums without coordinating both consumers. Adding optional fields is preferred over breaking changes. Pre-defined lists (priority, status, role, and payload dropdowns) use Title Case values.
 
 ## Loading from Lambda
 

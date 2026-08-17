@@ -23,7 +23,8 @@
       "type": "boolean",
       "description": "Include marketing and accessibility preferences"
     },
-    "as_of_date": {
+    "reference_date": {
+      "title": "Reference Date",
       "type": "string",
       "format": "date",
       "description": "Point-in-time for the profile snapshot (defaults to request date)"
@@ -33,11 +34,11 @@
       "items": {
         "type": "string",
         "enum": [
-          "identity",
-          "contact",
-          "employment",
-          "preferences",
-          "security_settings"
+          "Identity",
+          "Contact",
+          "Employment",
+          "Preferences",
+          "Security Settings"
         ]
       },
       "uniqueItems": true,

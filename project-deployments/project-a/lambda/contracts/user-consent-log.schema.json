@@ -12,13 +12,13 @@
       "items": {
         "type": "string",
         "enum": [
-          "marketing_email",
-          "marketing_sms",
-          "analytics",
-          "third_party_sharing",
-          "profiling",
-          "cookies_essential",
-          "cookies_optional"
+          "Marketing Email",
+          "Marketing SMS",
+          "Analytics",
+          "Third Party Sharing",
+          "Profiling",
+          "Cookies Essential",
+          "Cookies Optional"
         ]
       },
       "uniqueItems": true,
