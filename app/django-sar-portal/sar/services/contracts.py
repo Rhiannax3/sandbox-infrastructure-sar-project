@@ -39,9 +39,17 @@ def payload_schema(document_type: str) -> dict:
     return load_schema(filename)
 
 
+def humanize_label(value: str) -> str:
+    """Display label for a contract enum value (snake_case → Title Case)."""
+    if "_" in value:
+        label = value.replace("_", " ").title()
+        return label.replace("Sms", "SMS")
+    return value
+
+
 def humanize_document_type(document_type: str) -> str:
     """Display label for a document_type enum value (snake_case → Title Case)."""
-    return document_type.replace("_", " ").title()
+    return humanize_label(document_type)
 
 
 def document_type_choices() -> list[tuple[str, str]]:

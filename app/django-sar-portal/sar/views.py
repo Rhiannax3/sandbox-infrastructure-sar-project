@@ -135,7 +135,7 @@ def _build_payload_from_post(request: HttpRequest, document_type: str, field_def
         "requestor": {
             "officer_id": request.POST.get("officer_id", "OFF-UNKNOWN"),
             "email": user.email or "officer@sar-sandbox.local",
-            "role": "senior_officer" if user.is_staff else "standard_officer",
+            "role": "Senior Officer" if user.is_staff else "Standard Officer",
         },
         "payload": doc_payload,
     }

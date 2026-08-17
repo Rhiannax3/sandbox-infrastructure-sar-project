@@ -40,15 +40,15 @@
         <label for="{{ field.name }}">{{ field.title }}{% if field.required %} *{% endif %}</label>
         <select id="{{ field.name }}" name="{{ field.name }}" {% if field.required %}required{% endif %}>
           {% for opt in field.enum %}
-            <option value="{{ opt }}">{{ opt }}</option>
+            <option value="{{ opt }}">{{ opt|enum_label }}</option>
           {% endfor %}
         </select>
       {% elif field.items %}
         <label>{{ field.title }}{% if field.required %} *{% endif %}</label>
         {% for opt in field.items.enum %}
           <div class="checkbox-row">
-            <input type="checkbox" id="{{ field.name }}_{{ opt }}" name="{{ field.name }}" value="{{ opt }}">
-            <label for="{{ field.name }}_{{ opt }}">{{ opt }}</label>
+            <input type="checkbox" id="{{ field.name }}_{{ opt|slugify }}" name="{{ field.name }}" value="{{ opt }}">
+            <label for="{{ field.name }}_{{ opt|slugify }}">{{ opt|enum_label }}</label>
           </div>
         {% endfor %}
       {% else %}

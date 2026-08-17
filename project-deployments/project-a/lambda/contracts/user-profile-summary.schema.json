@@ -33,11 +33,11 @@
       "items": {
         "type": "string",
         "enum": [
-          "identity",
-          "contact",
-          "employment",
-          "preferences",
-          "security_settings"
+          "Identity",
+          "Contact",
+          "Employment",
+          "Preferences",
+          "Security Settings"
         ]
       },
       "uniqueItems": true,
