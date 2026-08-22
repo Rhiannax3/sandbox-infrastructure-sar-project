@@ -184,13 +184,50 @@ az account show --query "{user:user.name, tenant:tenantId, subscription:id}" -o 
 
 ## 7. Continue the Project B runbook
 
-From the [Project B (Azure) runbook](./project-b-azure-runbook.md):
+From the [Project B deployment stages](./project-b-deployment-stages.md) and [Project B (Azure) runbook](./project-b-azure-runbook.md):
 
 1. **[§1.3 New Azure subscriptions](./project-b-azure-runbook.md#13-new-azure-subscriptions)** — register resource providers if you have not already.
 2. **`make bootstrap-azure`** — does **not** need `databricks_account_id`.
 3. Uncomment `azurerm` backends in shared and engineer roots.
-4. **`make apply-b-shared`** — requires `databricks_account_id`.
-5. **`make apply-b ENGINEER=...`** with metastore and access connector outputs.
+4. **`make apply-b-shared`** — requires `databricks_account_id`; personal MSA → [§7.1 metastore adopt](#71-expect-metastore-adopt-personal-msa).
+5. **`make apply-b`** — requires engineer tfvars including `databricks_account_id` — [§7.2](#72-engineer-terraformtfvars).
+
+### 7.1 Expect metastore adopt (personal MSA)
+
+If you created a **Premium bootstrap workspace** in §4.1, Azure allows only **one metastore per region**. Before or when `apply-b-shared` fails with *metastore limit*:
+
+```hcl
+# terraform/project-b-azure-shared/terraform.tfvars
+create_metastore      = false
+existing_metastore_id = "<metastore-uuid>"
+```
+
+Find the metastore UUID: account console → **Catalog** → click metastore → UUID in URL. See [runbook §3.1](./project-b-azure-runbook.md#31-adopting-an-existing-metastore).
+
+### 7.2 Engineer `terraform.tfvars`
+
+The engineer root also needs `databricks_account_id` (same UUID as shared) for account-level Unity Catalog groups:
+
+```bash
+cp terraform/project-b-azure-engineer/example.tfvars \
+   terraform/project-b-azure-engineer/terraform.tfvars
+```
+
+Required fields: `engineer_id`, `databricks_account_id`, `metastore_id`, `access_connector_id`, `access_connector_principal_id`.
+
+Then:
+
+```bash
+make b-shared-env
+make apply-b ENGINEER=alex \
+  METASTORE_ID="$METASTORE_ID" \
+  ACCESS_CONNECTOR_ID="$ACCESS_CONNECTOR_ID" \
+  ACCESS_CONNECTOR_PRINCIPAL_ID="$ACCESS_CONNECTOR_PRINCIPAL_ID"
+```
+
+### 7.3 After a failed engineer apply
+
+If `apply-b` failed partway, do **not** delete the workspace. Follow [runbook §3.5](./project-b-azure-runbook.md#35-recover-from-a-failed-engineer-apply) or [deployment Stage 5R](./project-b-deployment-stages.md#stage-5r--recover-from-failed-engineer-apply).
 
 ---
 
@@ -232,14 +269,17 @@ Tenant ID: ____________________________________
   [ ] az login --tenant ... + az account set
   [ ] Resource providers registered (main runbook §1.3)
   [ ] make bootstrap-azure
-  [ ] make apply-b-shared
+  [ ] make apply-b-shared (create_metastore=false if bootstrap workspace)
+  [ ] engineer terraform.tfvars + make apply-b
+  [ ] Stage 5R recovery (if apply-b failed partway)
 ```
 
 ---
 
 ## Related docs
 
-- [Project B (Azure) runbook](./project-b-azure-runbook.md) — full deploy sequence after account ID is set
+- **[Project B deployment stages](./project-b-deployment-stages.md)** — stage-based first deploy
+- [Project B (Azure) runbook](./project-b-azure-runbook.md) — full reference, day-2, troubleshooting
 - [Platform administrator runbook summary](./runbook.md)
 - [Microsoft: Establish your first account admin](https://learn.microsoft.com/en-us/azure/databricks/admin/admin-concepts#establish-your-first-account-admin)
 - [Microsoft: Locate your account ID](https://learn.microsoft.com/en-us/azure/databricks/admin/account-settings/#locate-your-account-id)

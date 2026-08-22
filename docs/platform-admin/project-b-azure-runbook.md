@@ -6,6 +6,8 @@ This runbook is self-contained: everything you need for the Azure track is here.
 
 Sample SAR data is generated and seeded in-repo (`seed-data/`); it does **not** require a live Project A stack.
 
+**First-time deploy?** Use the stage-based guide: **[Project B deployment stages](./project-b-deployment-stages.md)** — it matches personal MSA accounts, metastore adopt, and recovery from partial applies. This runbook is the full reference for day-2 work and troubleshooting.
+
 ## 1. Prerequisites and tooling
 
 ### 1.1 Terraform (`>= 1.9`) and Make
@@ -56,13 +58,14 @@ Your identity must be able to create resource groups, storage, and Databricks wo
 
 On **CachyOS / Arch**, install the CLI from the official repos (`sudo pacman -S azure-cli`) rather than a Python/`uv` tool install — the standalone package avoids PATH and interpreter upgrade issues.
 
-**Optional Databricks CLI** (day-2 checks only; not required for Terraform):
+**Optional Databricks CLI** (day-2 checks only; **not** used by Terraform):
 
 ```bash
-yay -S databricks-cli-bin   # CachyOS / Arch — preferred over legacy pip packages
+yay -S databricks-cli-bin   # CachyOS / Arch
 databricks -v
-databricks auth login --host https://accounts.azuredatabricks.net
 ```
+
+Terraform authenticates via **`az login`** only. Do **not** use `databricks auth login --host https://accounts.azuredatabricks.net` for deploy — it requires an account ID you may not have yet and can hang. For account-level CLI queries after deploy, use `DATABRICKS_AUTH_TYPE=azure-cli` — see [§3.1 Option D](#option-d--databricks-cli-with-azure-cli-auth-no-databricks-auth-login).
 
 See [Install or update the Databricks CLI](https://learn.microsoft.com/en-us/azure/databricks/dev-tools/cli/install) for curl/Homebrew alternatives.
 
@@ -134,17 +137,48 @@ pre-commit install   # if using .pre-commit-config.yaml
 
 ## 2. Files to edit
 
+Copy each `example.tfvars` to `terraform.tfvars` in the same directory. Do **not** commit `terraform.tfvars`.
+
+### Shared stack — `terraform/project-b-azure-shared/terraform.tfvars`
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `databricks_account_id` | Yes | Databricks account UUID from account console — **not** subscription ID |
+| `location` | Yes | Default `uksouth` |
+| `create_metastore` | Yes | `true` for greenfield org tenant; **`false`** if bootstrap workspace already created metastore (personal MSA) |
+| `existing_metastore_id` | When adopting | Metastore UUID when `create_metastore = false` — [§3.1](#31-adopting-an-existing-metastore) |
+| `budget_alert_email` | No | Optional consumption budget alerts |
+
+### Engineer stack — `terraform/project-b-azure-engineer/terraform.tfvars`
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `engineer_id` | Yes | e.g. `alex` — must match `ENGINEER=` on Make command |
+| `databricks_account_id` | Yes | **Same UUID as shared** — needed for account-level groups |
+| `location` | Yes | Match shared (`uksouth`) |
+| `metastore_id` | Yes | From shared output (also pass as `METASTORE_ID` env to Make) |
+| `access_connector_id` | Yes | From shared output |
+| `access_connector_principal_id` | Yes | From shared output |
+| `budget_alert_email` | No | Optional per-engineer budget |
+
+Makefile `-var` flags for `METASTORE_ID`, `ACCESS_CONNECTOR_ID`, and `ACCESS_CONNECTOR_PRINCIPAL_ID` **override** the same keys in engineer tfvars if both are set.
+
+### Backend snippets (after bootstrap)
+
 | File | Action |
 |------|--------|
 | [`terraform/bootstrap/azure/main.tf`](../../terraform/bootstrap/azure/main.tf) | Optional: `location`, `resource_group_name` |
-| [`terraform/project-b-azure-shared/main.tf`](../../terraform/project-b-azure-shared/main.tf) | After bootstrap: uncomment `backend "azurerm"` |
-| [`terraform/project-b-azure-engineer/main.tf`](../../terraform/project-b-azure-engineer/main.tf) | Uncomment backend; use a **distinct** state `key` from shared |
-| [`terraform/project-b-azure-shared/example.tfvars`](../../terraform/project-b-azure-shared/example.tfvars) → `terraform.tfvars` | **Required:** `databricks_account_id`; optional metastore adopt + budget email |
-| [`terraform/project-b-azure-engineer/example.tfvars`](../../terraform/project-b-azure-engineer/example.tfvars) | Or pass Makefile env: `METASTORE_ID`, `ACCESS_CONNECTOR_*`; set `databricks_account_id` (same as shared) |
-
-Do **not** commit `terraform.tfvars`.
+| [`terraform/project-b-azure-shared/main.tf`](../../terraform/project-b-azure-shared/main.tf) | Uncomment `backend "azurerm"` |
+| [`terraform/project-b-azure-engineer/main.tf`](../../terraform/project-b-azure-engineer/main.tf) | Uncomment backend; distinct state `key` from shared |
 
 ## 3. Deploy sequence
+
+### 3.0 Choose your path
+
+| Your signup | Before §3 commands |
+|-------------|-------------------|
+| **Personal MSA** (`@outlook.com`, etc.) | Complete [Personal Azure account — Databricks setup](./personal-azure-databricks-setup.md) and [deployment Stage 1](./project-b-deployment-stages.md#stage-1--account--entra-personal-msa-only). Expect **`create_metastore = false`** if you created a bootstrap Premium workspace. |
+| **Organizational tenant** (`@company.com`) | `az login` + [§1.3 provider registration](#13-new-azure-subscriptions). Usually **`create_metastore = true`**. |
 
 ```mermaid
 flowchart TD
@@ -166,11 +200,16 @@ make bootstrap-azure
 
 cp terraform/project-b-azure-shared/example.tfvars \
    terraform/project-b-azure-shared/terraform.tfvars
-# Set databricks_account_id (and create_metastore / existing_metastore_id if needed)
+# Set databricks_account_id; personal MSA → create_metastore=false + existing_metastore_id
 
 make apply-b-shared
-# Record: records/project-b-shared.outputs.txt — copy metastore_id,
-# access_connector_id, access_connector_principal_id from there
+# Record: records/project-b-shared.outputs.txt
+
+make b-shared-env   # prints export METASTORE_ID=... lines
+
+cp terraform/project-b-azure-engineer/example.tfvars \
+   terraform/project-b-azure-engineer/terraform.tfvars
+# Set engineer_id, databricks_account_id, and shared output values
 
 make apply-b ENGINEER=alex \
   METASTORE_ID='...' \
@@ -267,10 +306,32 @@ Share: `databricks_workspace_url`, `catalog_name`, `landing_external_location`, 
 
 ### 3.4 Post-provision
 
-1. Add the junior’s Entra ID user to `sar-<id>-data-engineers`.
+1. Add the junior’s Entra ID user to **`sar-<id>-data-engineers`** — account console → **User management** → open the group → **Add user**. See [Appendix: Portal navigation](#appendix-portal-navigation).
 2. Power BI licences/workspaces are **manual** — [power-bi.md](../developer/project-b/power-bi.md).
 3. Confirm budget alerts if configured.
 4. Point the junior at the [Project B engineer runbook](../developer/project-b/runbook.md) and the [business questions](../developer/project-b/business-questions.md).
+
+### 3.5 Recover from a failed engineer apply
+
+Use when `make apply-b` failed **after** creating storage, workspace, or catalog but **before** groups, grants, or SQL warehouse succeeded. Full walkthrough: [deployment Stage 5R](./project-b-deployment-stages.md#stage-5r--recover-from-failed-engineer-apply).
+
+**Do not delete** the `sar-<id>` workspace or resource group unless you intend a full reprovision ([§5.2](#52-tear-down-one-engineer-stack)).
+
+1. **Ensure latest code** — engineer module requires account-level groups and `databricks_account_id` in engineer tfvars.
+2. **Engineer tfvars** — [`terraform/project-b-azure-engineer/terraform.tfvars`](../../terraform/project-b-azure-engineer/terraform.tfvars) must include `databricks_account_id` (same as shared).
+3. **Delete workspace-local groups only** (if present): in the **`sar-<id>` workspace** → **Administration** → **Groups** → remove `sar-<id>-data-engineers`, `-analysts`, `-report-authors`. Do not delete account-level groups unless re-apply reports duplicates.
+4. **Optional:** delete stuck SQL warehouse `sar-<id>-sql` in workspace → **SQL**.
+5. **Re-run:**
+   ```bash
+   make b-shared-env
+   make apply-b ENGINEER=alex \
+     METASTORE_ID="$METASTORE_ID" \
+     ACCESS_CONNECTOR_ID="$ACCESS_CONNECTOR_ID" \
+     ACCESS_CONNECTOR_PRINCIPAL_ID="$ACCESS_CONNECTOR_PRINCIPAL_ID"
+   ```
+6. If grants fail with *Could not find principal*, wait 60 seconds and retry once.
+
+**When to destroy instead:** use `make destroy-b` only when you want a completely clean engineer sandbox, then re-run §3 deploy block for that engineer.
 
 ## 4. Day-2 operations
 
@@ -440,8 +501,9 @@ Log is written to `records/project-b-alex.destroy.log`.
 
 ## 6. Makefile defaults
 
-| Variable | Default | Notes |
-|----------|---------|-------|
+| Target / variable | Default | Notes |
+|-------------------|---------|-------|
+| `make b-shared-env` | — | Prints `export METASTORE_ID=...` from shared Terraform output |
 | `ENGINEER` | `demo` | Terraform workspace name; set per engineer |
 | `AZURE_LOCATION` | `uksouth` | Project B only |
 | `RECORDS` | `records` | Local plan/apply/output files (gitignored) |
@@ -464,21 +526,46 @@ Log is written to `records/project-b-alex.destroy.log`.
 
 ## 8. Checklist
 
+Use the stage checklist in **[Project B deployment stages](./project-b-deployment-stages.md#stage-checklist-copy-per-deploy)** — it covers personal MSA, metastore adopt, engineer tfvars, and recovery.
+
+Quick reference:
+
 ```text
-Engineer ID: ________
-Subscription ID: _____________
-  [ ] az login + az account set
-  [ ] Resource providers registered (§1.3) — Microsoft.Storage shows Registered
-bootstrap-azure + backends:  [ ]
-apply-b-shared:              [ ]
-apply-b:                     [ ]
-  workspace URL: _____________
-  catalog: ___________________
-  in data-engineers group:   [ ]
-Power BI licence (Phase 4):  [ ]  (optional / later)
+Stage 0  Tooling:                          [ ]
+Stage 1  Personal account (if MSA):       [ ]  skipped — org tenant
+Stage 2  Providers registered:            [ ]
+Stage 3  bootstrap-azure + backends:      [ ]
+Stage 4  apply-b-shared:                   [ ]
+         create_metastore=false (MSA):     [ ]
+Stage 5  engineer terraform.tfvars:        [ ]
+         apply-b ENGINEER=___:             [ ]
+Stage 5R Recovery (if needed):            [ ]
+Stage 6  Junior in data-engineers group:   [ ]
+         Smoke test passed:                [ ]
+Power BI licence (Phase 4):               [ ]  (optional / later)
 ```
 
+## Appendix: Portal navigation
+
+Where to click for common admin tasks (Azure and Databricks UI labels change occasionally — look for the closest match).
+
+| Task | Where |
+|------|--------|
+| **Tenant ID** | Azure Portal → **Microsoft Entra ID** → **Overview** → Tenant ID |
+| **#EXT# user / Global Admin** | Entra ID → **Users** / **Roles and administrators** |
+| **Account console** | [accounts.azuredatabricks.net/?tenant_id=...](https://accounts.azuredatabricks.net) after portal login as `#EXT#` user (personal MSA) |
+| **Databricks account ID** | Account console → username menu (top right) → **Account ID** |
+| **Metastore ID** | Account console → **Catalog** → click metastore → UUID in URL between `/data/` and `/configurations` |
+| **Add junior to data-engineers group** | Account console → **User management** → **`sar-<id>-data-engineers`** → Add user |
+| **Workspace-local groups** (delete on recovery) | Workspace UI → **Administration** → **Groups** |
+| **SQL warehouse** | Workspace UI → **SQL** → **SQL warehouses** |
+| **Launch engineer workspace** | Azure Portal → resource group `sar-<id>` → Databricks workspace → **Launch workspace** |
+| **Unity Catalog catalog** | Workspace UI → **Catalog** → `sar_sandbox_<id>` |
+| **Enterprise applications** (optional) | Entra ID → **Enterprise applications** — often empty on fresh tenants; ignore if account console works |
+
 ## 9. Related docs
+
+- **[Project B deployment stages](./project-b-deployment-stages.md)** — first-time deploy navigation
 
 - [Personal Azure account — Databricks setup](./personal-azure-databricks-setup.md) — MSA / Outlook signup and account console access
 - [Platform administrator runbook summary](./runbook.md) — both tracks at a glance

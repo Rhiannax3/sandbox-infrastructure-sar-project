@@ -11,7 +11,7 @@ This repository provisions the **base infrastructure and boilerplate** that juni
 | Role | Start here |
 |------|------------|
 | **Platform admin** — Project A only | [Project A (AWS) admin runbook](docs/platform-admin/project-a-aws-runbook.md) |
-| **Platform admin** — Project B only | [Project B (Azure) admin runbook](docs/platform-admin/project-b-azure-runbook.md) |
+| **Platform admin** — Project B only | [Project B deployment stages](docs/platform-admin/project-b-deployment-stages.md) (start here) · [Azure runbook](docs/platform-admin/project-b-azure-runbook.md) |
 | **Platform admin** — both tracks | [Platform administrator runbook summary](docs/platform-admin/runbook.md) |
 | Junior — Project A | [Runbook](docs/developer/project-a/runbook.md) · [Exercises](docs/developer/project-a/exercises/phased-exercises.md) · [Lambda folder](project-deployments/project-a/README.md) |
 | Junior — Project B | [Project B runbook](docs/developer/project-b/runbook.md) |
@@ -61,19 +61,22 @@ make apply-a ENGINEER=alex
 
 ### Project B only (Azure)
 
+Follow **[Project B deployment stages](docs/platform-admin/project-b-deployment-stages.md)** for first-time deploy (personal MSA, metastore adopt, recovery).
+
 ```bash
 az login && az account set --subscription "<subscription-id-or-name>"
-# New subscription? Register providers first — see Project B admin runbook §1.3
+# Personal @outlook.com? See docs/platform-admin/personal-azure-databricks-setup.md first
 make bootstrap-azure
-# → uncomment azurerm backends; set databricks_account_id in shared tfvars
+# → uncomment azurerm backends; terraform.tfvars in shared + engineer roots
 make apply-b-shared
+make b-shared-env   # export METASTORE_ID=...
 make apply-b ENGINEER=alex \
   METASTORE_ID=... \
   ACCESS_CONNECTOR_ID=... \
   ACCESS_CONNECTOR_PRINCIPAL_ID=...
 ```
 
-Full file lists, handoff checklists, and troubleshooting: **[Project A (AWS)](docs/platform-admin/project-a-aws-runbook.md)** · **[Project B (Azure)](docs/platform-admin/project-b-azure-runbook.md)**.
+Full reference: **[Project B (Azure) runbook](docs/platform-admin/project-b-azure-runbook.md)** · **[Deployment stages](docs/platform-admin/project-b-deployment-stages.md)**.
 
 ## Isolation model
 

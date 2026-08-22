@@ -12,11 +12,14 @@ Projects are **independent** — run only the track the engineer needs.
 
 ## Project B only (Azure)
 
-1. **Personal MSA signup?** Complete [Personal Azure — Databricks setup](../platform-admin/personal-azure-databricks-setup.md) first (account console + account ID).
+**First deploy:** follow **[Project B deployment stages](../platform-admin/project-b-deployment-stages.md)**.
+
+1. **Personal MSA signup?** [Personal Azure — Databricks setup](../platform-admin/personal-azure-databricks-setup.md) (account console + account ID; expect metastore adopt).
 2. `az login` → set subscription
-3. **New subscription?** Register Azure resource providers — [runbook §1.3](../platform-admin/project-b-azure-runbook.md#13-new-azure-subscriptions)
+3. **New subscription?** Register providers — [runbook §1.3](../platform-admin/project-b-azure-runbook.md#13-new-azure-subscriptions)
 4. `make bootstrap-azure` → uncomment azurerm backends
-5. Set `databricks_account_id` in shared `terraform.tfvars` → `make apply-b-shared`
-6. `make apply-b ENGINEER=<id> METASTORE_ID=... ACCESS_CONNECTOR_ID=... ACCESS_CONNECTOR_PRINCIPAL_ID=...`
-7. Add user to Databricks `sar-<id>-data-engineers`
-8. Power BI licences remain manual — [power-bi.md](../developer/project-b/power-bi.md)
+5. Shared + engineer `terraform.tfvars` → `make apply-b-shared`
+6. `make b-shared-env` → `make apply-b ENGINEER=<id> ...`
+7. **Failed apply?** [Stage 5R](../platform-admin/project-b-deployment-stages.md#stage-5r--recover-from-failed-engineer-apply) — keep workspace, fix groups, re-apply
+8. Add user to account group `sar-<id>-data-engineers` (account console → User management)
+9. Power BI licences remain manual — [power-bi.md](../developer/project-b/power-bi.md)

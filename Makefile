@@ -16,9 +16,11 @@ SHELL := /bin/bash
 
 .PHONY: help bootstrap-aws bootstrap-azure \
 	init-a plan-a apply-a destroy-a \
-	init-b-shared apply-b-shared \
+	init-b-shared apply-b-shared b-shared-env \
 	init-b plan-b apply-b destroy-b \
 	fmt validate seed-data stage-app lint
+
+TF_B_ENGINEER_TFVARS := $(TF_B)/terraform.tfvars
 
 help:
 	@echo "SAR sandbox Makefile"
@@ -38,6 +40,7 @@ help:
 	@echo ""
 	@echo "Project B (Azure / Databricks):"
 	@echo "  make apply-b-shared"
+	@echo "  make b-shared-env          Print export METASTORE_ID=... from shared outputs"
 	@echo "  make plan-b ENGINEER=alex"
 	@echo "  make apply-b ENGINEER=alex"
 	@echo ""
@@ -125,11 +128,32 @@ apply-b-shared: init-b-shared
 		> $(CURDIR)/$(RECORDS)/project-b-shared.outputs.json
 	@echo "Recorded shared outputs in $(RECORDS)/project-b-shared.outputs.*"
 
+b-shared-env: init-b-shared
+	@echo "# Paste these exports into your shell (from project-b-azure-shared outputs):"
+	@cd $(TF_B_SHARED) && \
+	 METASTORE=$$(terraform output -raw metastore_id 2>/dev/null) && \
+	 AC=$$(terraform output -raw access_connector_id 2>/dev/null) && \
+	 ACP=$$(terraform output -raw access_connector_principal_id 2>/dev/null) && \
+	 test -n "$$METASTORE" && test -n "$$AC" && test -n "$$ACP" || \
+	   (echo "ERROR: shared outputs missing — run make apply-b-shared first" >&2; exit 1) && \
+	 printf 'export METASTORE_ID=%q\nexport ACCESS_CONNECTOR_ID=%q\nexport ACCESS_CONNECTOR_PRINCIPAL_ID=%q\n' \
+	   "$$METASTORE" "$$AC" "$$ACP"
+
+# Preflight: engineer terraform.tfvars must exist with a real databricks_account_id
+check-b-engineer-tfvars:
+	@test -f "$(TF_B_ENGINEER_TFVARS)" || \
+	  (echo "Missing $(TF_B_ENGINEER_TFVARS) — copy from example.tfvars and set databricks_account_id" >&2; exit 1)
+	@grep -qE '^databricks_account_id[[:space:]]*=' "$(TF_B_ENGINEER_TFVARS)" || \
+	  (echo "$(TF_B_ENGINEER_TFVARS) must set databricks_account_id" >&2; exit 1)
+	@if grep -qE 'REPLACE_DATABRICKS_ACCOUNT_ID|00000000-0000-0000-0000-000000000000' "$(TF_B_ENGINEER_TFVARS)"; then \
+	  echo "Set a real databricks_account_id in $(TF_B_ENGINEER_TFVARS) (not placeholder)" >&2; exit 1; \
+	fi
+
 init-b:
 	cd $(TF_B) && terraform init
 	cd $(TF_B) && (terraform workspace select $(ENGINEER) 2>/dev/null || terraform workspace new $(ENGINEER))
 
-plan-b: init-b
+plan-b: init-b check-b-engineer-tfvars
 	@test -n "$(METASTORE_ID)" || (echo "Set METASTORE_ID=... ACCESS_CONNECTOR_ID=... ACCESS_CONNECTOR_PRINCIPAL_ID=... from shared outputs"; exit 1)
 	@mkdir -p $(RECORDS)
 	cd $(TF_B) && terraform plan -no-color \
@@ -142,7 +166,7 @@ plan-b: init-b
 		| tee $(CURDIR)/$(RECORDS)/project-b-$(ENGINEER).plan.txt
 	@echo "Recorded plan in $(RECORDS)/project-b-$(ENGINEER).plan.txt (+ .tfplan)"
 
-apply-b: init-b
+apply-b: init-b check-b-engineer-tfvars
 	@test -n "$(METASTORE_ID)" || (echo "Set METASTORE_ID=... ACCESS_CONNECTOR_ID=... ACCESS_CONNECTOR_PRINCIPAL_ID=... from shared outputs"; exit 1)
 	@mkdir -p $(RECORDS)
 	cd $(TF_B) && terraform apply -auto-approve -no-color \
