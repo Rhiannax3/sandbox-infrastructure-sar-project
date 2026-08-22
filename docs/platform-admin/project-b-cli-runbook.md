@@ -33,6 +33,7 @@ bash scripts/project-b-recover-engineer.sh alex
 
 | Topic | Guidance |
 |-------|----------|
+| Azure resource names | Engineer RG is **`rg-sar-<id>`** (not `sar-<id>`); workspace is **`dbw-sar-<id>`** |
 | Identity | Use `#EXT#` Entra UPN, not raw `@outlook.com`, for Databricks account APIs |
 | Azure CLI | `sudo pacman -S azure-cli` — use `/usr/bin/az`, not a broken `~/.local/bin/az` |
 | Terraform auth | `auth_type = "azure-cli"` — same session as `az login`; no `databricks auth login` for apply |
@@ -203,9 +204,12 @@ make apply-b ENGINEER=alex \
 ### One command (bash script from fish)
 
 ```fish
+bash scripts/project-b-delete-workspace-local-groups.sh alex
 bash scripts/project-b-recover-engineer.sh alex
-bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # if SQL warehouse stuck
+bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # SQL warehouse only
 ```
+
+`--delete-warehouse` does **not** remove conflicting workspace-local groups.
 
 ### Manual fish equivalent
 
@@ -261,7 +265,8 @@ Add junior to account group via Databricks account/workspace SCIM API (see [Micr
 | Script | Purpose |
 |--------|---------|
 | [`scripts/project-b-auth-check.sh`](../../scripts/project-b-auth-check.sh) | Az login, RBAC, providers, tfvars, optional account API |
-| [`scripts/project-b-recover-engineer.sh`](../../scripts/project-b-recover-engineer.sh) | Group cleanup + `make apply-b` |
+| [`scripts/project-b-delete-workspace-local-groups.sh`](../../scripts/project-b-delete-workspace-local-groups.sh) | Remove legacy workspace-local groups blocking permission_assignment |
+| [`scripts/project-b-recover-engineer.sh`](../../scripts/project-b-recover-engineer.sh) | Group cleanup + import + `make apply-b` |
 
 | Make target | Purpose |
 |-------------|---------|

@@ -27,11 +27,6 @@ TF_SHARED="${ROOT}/terraform/project-b-azure-shared"
 TF_ENGINEER="${ROOT}/terraform/project-b-azure-engineer"
 TF_ENGINEER_TFVARS="${ROOT}/terraform/project-b-azure-engineer/terraform.tfvars"
 
-GROUPS=(
-  "${PREFIX}-data-engineers"
-  "${PREFIX}-analysts"
-  "${PREFIX}-report-authors"
-)
 WAREHOUSE_NAME="${PREFIX}-sql"
 
 echo "==> Project B engineer recovery: ${ENGINEER}"
@@ -125,21 +120,28 @@ export DATABRICKS_HOST="https://${WS_URL}"
 export DATABRICKS_AUTH_TYPE="${DATABRICKS_AUTH_TYPE:-azure-cli}"
 
 echo
-echo "==> List workspace groups"
-databricks groups-v2 list -o json | jq '.[] | {id, displayName}' || true
+echo "==> Delete workspace-local groups (blocks permission_assignment)"
+echo "    --delete-warehouse only removes SQL warehouse; groups need separate cleanup"
+bash "${ROOT}/scripts/project-b-delete-workspace-local-groups.sh" "$ENGINEER"
 
 echo
-echo "==> Delete workspace-local stale groups (if present)"
-echo "    (required if permission_assignment failed with 'Workspace group ... already exists')"
-for name in "${GROUPS[@]}"; do
-  id="$(databricks groups-v2 list -o json | jq -r --arg n "$name" '.[] | select(.displayName==$n) | .id' | head -1)"
-  if [[ -n "$id" && "$id" != "null" ]]; then
-    echo "    deleting group ${name} (${id})"
-    databricks groups-v2 delete "$id" || echo "    WARN: delete failed for ${name} (may be account-level — skip)"
-  else
-    echo "    not found in workspace: ${name}"
-  fi
-done
+echo "==> Import existing permission assignments (if account groups already assigned)"
+if (cd "$TF_ENGINEER" && terraform init -input=false >/dev/null 2>&1); then
+  (cd "$TF_ENGINEER" && terraform workspace select "$ENGINEER" >/dev/null 2>&1) || true
+  for role in data_engineers analysts report_authors; do
+    pid="$(cd "$TF_ENGINEER" && terraform state show -no-color "module.workspace_config.databricks_group.${role}" 2>/dev/null \
+      | awk '/^id / { gsub(/"/, "", $3); print $3; exit }' || true)"
+    if [[ -n "$pid" ]]; then
+      if (cd "$TF_ENGINEER" && terraform state show "module.workspace_config.databricks_permission_assignment.${role}" >/dev/null 2>&1); then
+        echo "    ${role}: already in state"
+      else
+        echo "    ${role}: importing permission_assignment principal ${pid}"
+        (cd "$TF_ENGINEER" && terraform import "module.workspace_config.databricks_permission_assignment.${role}" "$pid") \
+          || echo "    WARN: import failed for ${role} (will retry on apply)"
+      fi
+    fi
+  done
+fi
 
 if [[ "$DELETE_WAREHOUSE" -eq 1 ]]; then
   echo

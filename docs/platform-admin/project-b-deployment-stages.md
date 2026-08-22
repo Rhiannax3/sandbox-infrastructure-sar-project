@@ -245,8 +245,11 @@ make apply-b ENGINEER=alex \
 **CLI-first:** run from repo root (fish or bash):
 
 ```fish
+# Groups must be cleared first (--delete-warehouse does NOT remove groups)
+bash scripts/project-b-delete-workspace-local-groups.sh alex
 bash scripts/project-b-recover-engineer.sh alex
-bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # optional
+# optional stuck warehouse only:
+bash scripts/project-b-recover-engineer.sh alex --delete-warehouse
 ```
 
 Full detail: [Project B CLI runbook — Phase 4](./project-b-cli-runbook.md#phase-4--recovery-failed-partial-apply).

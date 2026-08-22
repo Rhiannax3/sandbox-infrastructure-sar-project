@@ -170,31 +170,35 @@ resource "databricks_cluster_policy" "cost_capped" {
 resource "databricks_group" "data_engineers" {
   provider     = databricks.accounts
   display_name = "${var.name_prefix}-data-engineers"
+  force        = true
 }
 
 resource "databricks_group" "analysts" {
   provider     = databricks.accounts
   display_name = "${var.name_prefix}-analysts"
+  force        = true
 }
 
 resource "databricks_group" "report_authors" {
   provider     = databricks.accounts
   display_name = "${var.name_prefix}-report-authors"
+  force        = true
 }
 
+# group_name references the account group display name (avoids principal_id lookup issues).
 resource "databricks_permission_assignment" "data_engineers" {
-  principal_id = databricks_group.data_engineers.id
-  permissions  = ["USER"]
+  group_name  = databricks_group.data_engineers.display_name
+  permissions = ["USER"]
 }
 
 resource "databricks_permission_assignment" "analysts" {
-  principal_id = databricks_group.analysts.id
-  permissions  = ["USER"]
+  group_name  = databricks_group.analysts.display_name
+  permissions = ["USER"]
 }
 
 resource "databricks_permission_assignment" "report_authors" {
-  principal_id = databricks_group.report_authors.id
-  permissions  = ["USER"]
+  group_name  = databricks_group.report_authors.display_name
+  permissions = ["USER"]
 }
 
 resource "databricks_entitlements" "data_engineers" {
