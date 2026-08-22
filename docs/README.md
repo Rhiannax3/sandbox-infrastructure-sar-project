@@ -3,6 +3,9 @@
 - **[Platform administrator runbook](platform-admin/runbook.md)** — summary of both tracks; start here to choose
   - [Project A (AWS)](platform-admin/project-a-aws-runbook.md) — credentials, install, deploy, day-2, handoff
   - [Project B (Azure)](platform-admin/project-b-azure-runbook.md) — credentials, install, deploy, day-2, handoff
+  - **[Project B CLI runbook](platform-admin/project-b-cli-runbook.md)** — CLI-only deploy (fish); auth check + recovery scripts
+  - **[Project B deployment stages](platform-admin/project-b-deployment-stages.md)** — first-time deploy navigation (personal MSA, recovery)
+  - [Personal Azure account — Databricks setup](platform-admin/personal-azure-databricks-setup.md) — MSA/Outlook signup, account console, account ID
 - [Project A — Engineer runbook](developer/project-a/runbook.md)
 - [Project A — SAR request exercises (Phases 1–4)](developer/project-a/exercises/phased-exercises.md)
 - [Project A — C4 modelling skeleton](developer/project-a/c4-skeleton.md)

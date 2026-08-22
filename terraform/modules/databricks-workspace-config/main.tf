@@ -113,17 +113,24 @@ resource "databricks_catalog" "sandbox" {
 resource "databricks_sql_endpoint" "warehouse" {
   name                      = "${var.name_prefix}-sql"
   cluster_size              = "2X-Small"
-  min_num_clusters          = 1
+  min_num_clusters          = 0
   max_num_clusters          = 1
   auto_stop_mins            = var.sql_warehouse_auto_stop_mins
   enable_serverless_compute = false
   warehouse_type            = "PRO"
+  # Personal/trial subs often hit "Cluster Start-up Delayed" — create the warehouse
+  # without waiting for RUNNING; it starts on first SQL query.
+  no_wait = true
 
   tags {
     custom_tags {
       key   = "Engineer"
       value = var.engineer_id
     }
+  }
+
+  timeouts {
+    create = "45m"
   }
 
   depends_on = [databricks_metastore_assignment.this]
@@ -158,17 +165,66 @@ resource "databricks_cluster_policy" "cost_capped" {
   })
 }
 
-# Persona groups for Phase 5 RBAC exercises (grants left to engineers)
+# Persona groups for Phase 5 RBAC exercises (grants left to engineers).
+# Unity Catalog grants require account-level groups, not workspace-local groups.
 resource "databricks_group" "data_engineers" {
+  provider     = databricks.accounts
   display_name = "${var.name_prefix}-data-engineers"
+  force        = true
 }
 
 resource "databricks_group" "analysts" {
+  provider     = databricks.accounts
   display_name = "${var.name_prefix}-analysts"
+  force        = true
 }
 
 resource "databricks_group" "report_authors" {
+  provider     = databricks.accounts
   display_name = "${var.name_prefix}-report-authors"
+  force        = true
+}
+
+# group_name references the account group display name (avoids principal_id lookup issues).
+resource "databricks_permission_assignment" "data_engineers" {
+  group_name  = databricks_group.data_engineers.display_name
+  permissions = ["USER"]
+}
+
+resource "databricks_permission_assignment" "analysts" {
+  group_name  = databricks_group.analysts.display_name
+  permissions = ["USER"]
+}
+
+resource "databricks_permission_assignment" "report_authors" {
+  group_name  = databricks_group.report_authors.display_name
+  permissions = ["USER"]
+}
+
+resource "databricks_entitlements" "data_engineers" {
+  group_id                   = databricks_group.data_engineers.id
+  workspace_access           = true
+  databricks_sql_access      = true
+  allow_cluster_create       = true
+  allow_instance_pool_create = false
+
+  depends_on = [databricks_permission_assignment.data_engineers]
+}
+
+resource "databricks_entitlements" "analysts" {
+  group_id              = databricks_group.analysts.id
+  workspace_access      = true
+  databricks_sql_access = true
+
+  depends_on = [databricks_permission_assignment.analysts]
+}
+
+resource "databricks_entitlements" "report_authors" {
+  group_id              = databricks_group.report_authors.id
+  workspace_access      = true
+  databricks_sql_access = true
+
+  depends_on = [databricks_permission_assignment.report_authors]
 }
 
 # Baseline: engineers can use the catalog; layer grants are a Phase 5 task
@@ -189,6 +245,12 @@ resource "databricks_grants" "catalog_engineers" {
     principal  = databricks_group.report_authors.display_name
     privileges = ["USE_CATALOG"]
   }
+
+  depends_on = [
+    databricks_permission_assignment.data_engineers,
+    databricks_permission_assignment.analysts,
+    databricks_permission_assignment.report_authors,
+  ]
 }
 
 resource "databricks_grants" "landing_engineers" {
@@ -198,6 +260,8 @@ resource "databricks_grants" "landing_engineers" {
     principal  = databricks_group.data_engineers.display_name
     privileges = ["READ_FILES", "WRITE_FILES", "CREATE_EXTERNAL_TABLE"]
   }
+
+  depends_on = [databricks_permission_assignment.data_engineers]
 }
 
 output "catalog_name" {

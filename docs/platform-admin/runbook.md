@@ -7,7 +7,7 @@ Provisioning guide for the SAR sandbox foundational infrastructure. Junior engin
 | Track | Project | Cloud | Runbook |
 |-------|---------|-------|---------|
 | **AWS only** | A — API & Document Request System | AWS | [Project A (AWS) runbook](./project-a-aws-runbook.md) |
-| **Azure only** | B — Medallion lake & reporting | Azure / Databricks | [Project B (Azure) runbook](./project-b-azure-runbook.md) |
+| **Azure only** | B — Medallion lake & reporting | Azure / Databricks | [CLI runbook (fish)](./project-b-cli-runbook.md) · [Deployment stages](./project-b-deployment-stages.md) · [Runbook](./project-b-azure-runbook.md) |
 | Both | Full programme | AWS + Azure | Work both runbooks; order does not matter |
 
 There is **no runtime dependency** between the AWS portal/API sandbox and the Azure Databricks lake. Sample SAR data for Project B is generated and seeded in-repo (`seed-data/`); it does not require a live Project A stack.
@@ -33,19 +33,21 @@ Both runbooks assume Terraform `>= 1.9` and `make`, and both repeat the install 
 
 ## Project B (Azure) at a glance
 
-[Full runbook →](./project-b-azure-runbook.md)
+[Full runbook →](./project-b-azure-runbook.md) · **[First-time deploy stages →](./project-b-deployment-stages.md)**
 
 **What you provision:** a shared stack holding the Databricks access connector and Unity Catalog metastore (create or adopt), then per engineer an ADLS Gen2 account with seeded landing data, a Databricks workspace assigned to the metastore, a catalog and external location, a cost-capped SQL warehouse, and persona groups.
 
 | Step | What happens |
 |------|--------------|
-| Tooling and credentials | Terraform, Azure CLI, `az login`; **Databricks account admin** for the shared stack |
+| Tooling and credentials | Terraform, Azure CLI (`pacman` on Arch/CachyOS), `az login`; **Databricks account admin** for the shared stack — [personal MSA signup guide](./personal-azure-databricks-setup.md) if needed |
+| **New subscription** | Register `Microsoft.Storage`, `Microsoft.Databricks`, and related providers — [§1.3](./project-b-azure-runbook.md#13-new-azure-subscriptions) — before bootstrap |
 | Bootstrap | `make bootstrap-azure` creates the state storage account, then you uncomment the azurerm backends |
 | Shared apply | `make apply-b-shared` — set `databricks_account_id`; record `metastore_id` and access connector values |
-| Engineer apply | `make apply-b ENGINEER=<id> METASTORE_ID=… ACCESS_CONNECTOR_*=…` |
+| Engineer apply | `make b-shared-env` then `make apply-b` — engineer `terraform.tfvars` needs `databricks_account_id` too |
+| Failed apply | [Stage 5R recovery](./project-b-deployment-stages.md#stage-5r--recover-from-failed-engineer-apply) — do not delete workspace |
 | Handoff | Add the junior to `sar-<id>-data-engineers`; share workspace URL, catalog, external location, SQL warehouse JDBC URL |
 
-**Recurring admin tasks:** regenerate seed data with `make seed-data`, destroy individual engineer stacks, and leave the shared metastore alone while workspaces are still assigned. Power BI licences remain a manual step.
+**Recurring admin tasks:** regenerate seed data and refresh landing ([§4.1](./project-b-azure-runbook.md#41-regenerate-seed-data-and-refresh-landing-storage)), add or remove engineer sandboxes ([§5 Engineer sandbox lifecycle](./project-b-azure-runbook.md#5-engineer-sandbox-lifecycle)), leave the shared metastore in place while workspaces exist ([§4.2](./project-b-azure-runbook.md#42-shared-metastore-and-shared-stack-lifecycle)). Power BI licences remain a manual step.
 
 ## Related docs
 
