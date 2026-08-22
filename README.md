@@ -11,7 +11,7 @@ This repository provisions the **base infrastructure and boilerplate** that juni
 | Role | Start here |
 |------|------------|
 | **Platform admin** — Project A only | [Project A (AWS) admin runbook](docs/platform-admin/project-a-aws-runbook.md) |
-| **Platform admin** — Project B only | [Project B deployment stages](docs/platform-admin/project-b-deployment-stages.md) (start here) · [Azure runbook](docs/platform-admin/project-b-azure-runbook.md) |
+| **Platform admin** — Project B only | [Project B CLI runbook](docs/platform-admin/project-b-cli-runbook.md) (CLI/fish) · [Deployment stages](docs/platform-admin/project-b-deployment-stages.md) · [Azure runbook](docs/platform-admin/project-b-azure-runbook.md) |
 | **Platform admin** — both tracks | [Platform administrator runbook summary](docs/platform-admin/runbook.md) |
 | Junior — Project A | [Runbook](docs/developer/project-a/runbook.md) · [Exercises](docs/developer/project-a/exercises/phased-exercises.md) · [Lambda folder](project-deployments/project-a/README.md) |
 | Junior — Project B | [Project B runbook](docs/developer/project-b/runbook.md) |

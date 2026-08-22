@@ -16,7 +16,7 @@ SHELL := /bin/bash
 
 .PHONY: help bootstrap-aws bootstrap-azure \
 	init-a plan-a apply-a destroy-a \
-	init-b-shared apply-b-shared b-shared-env \
+	init-b-shared apply-b-shared b-shared-env b-shared-env-fish \
 	init-b plan-b apply-b destroy-b \
 	fmt validate seed-data stage-app lint
 
@@ -40,7 +40,8 @@ help:
 	@echo ""
 	@echo "Project B (Azure / Databricks):"
 	@echo "  make apply-b-shared"
-	@echo "  make b-shared-env          Print export METASTORE_ID=... from shared outputs"
+	@echo "  make b-shared-env          Print export METASTORE_ID=... (bash)"
+	@echo "  make b-shared-env-fish     Print set -x METASTORE_ID=... (fish)"
 	@echo "  make plan-b ENGINEER=alex"
 	@echo "  make apply-b ENGINEER=alex"
 	@echo ""
@@ -137,6 +138,17 @@ b-shared-env: init-b-shared
 	 test -n "$$METASTORE" && test -n "$$AC" && test -n "$$ACP" || \
 	   (echo "ERROR: shared outputs missing — run make apply-b-shared first" >&2; exit 1) && \
 	 printf 'export METASTORE_ID=%q\nexport ACCESS_CONNECTOR_ID=%q\nexport ACCESS_CONNECTOR_PRINCIPAL_ID=%q\n' \
+	   "$$METASTORE" "$$AC" "$$ACP"
+
+b-shared-env-fish: init-b-shared
+	@echo "# Paste or source in fish (from project-b-azure-shared outputs):"
+	@cd $(TF_B_SHARED) && \
+	 METASTORE=$$(terraform output -raw metastore_id 2>/dev/null) && \
+	 AC=$$(terraform output -raw access_connector_id 2>/dev/null) && \
+	 ACP=$$(terraform output -raw access_connector_principal_id 2>/dev/null) && \
+	 test -n "$$METASTORE" && test -n "$$AC" && test -n "$$ACP" || \
+	   (echo "ERROR: shared outputs missing — run make apply-b-shared first" >&2; exit 1) && \
+	 printf 'set -x METASTORE_ID %q\nset -x ACCESS_CONNECTOR_ID %q\nset -x ACCESS_CONNECTOR_PRINCIPAL_ID %q\n' \
 	   "$$METASTORE" "$$AC" "$$ACP"
 
 # Preflight: engineer terraform.tfvars must exist with a real databricks_account_id

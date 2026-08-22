@@ -7,7 +7,7 @@ Provisioning guide for the SAR sandbox foundational infrastructure. Junior engin
 | Track | Project | Cloud | Runbook |
 |-------|---------|-------|---------|
 | **AWS only** | A — API & Document Request System | AWS | [Project A (AWS) runbook](./project-a-aws-runbook.md) |
-| **Azure only** | B — Medallion lake & reporting | Azure / Databricks | [Deployment stages](./project-b-deployment-stages.md) · [Runbook](./project-b-azure-runbook.md) |
+| **Azure only** | B — Medallion lake & reporting | Azure / Databricks | [CLI runbook (fish)](./project-b-cli-runbook.md) · [Deployment stages](./project-b-deployment-stages.md) · [Runbook](./project-b-azure-runbook.md) |
 | Both | Full programme | AWS + Azure | Work both runbooks; order does not matter |
 
 There is **no runtime dependency** between the AWS portal/API sandbox and the Azure Databricks lake. Sample SAR data for Project B is generated and seeded in-repo (`seed-data/`); it does not require a live Project A stack.

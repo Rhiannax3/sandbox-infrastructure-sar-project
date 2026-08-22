@@ -6,7 +6,9 @@ This runbook is self-contained: everything you need for the Azure track is here.
 
 Sample SAR data is generated and seeded in-repo (`seed-data/`); it does **not** require a live Project A stack.
 
-**First-time deploy?** Use the stage-based guide: **[Project B deployment stages](./project-b-deployment-stages.md)** — it matches personal MSA accounts, metastore adopt, and recovery from partial applies. This runbook is the full reference for day-2 work and troubleshooting.
+**First-time deploy?** Use the stage-based guide: **[Project B deployment stages](./project-b-deployment-stages.md)** — it matches personal MSA accounts, metastore adopt, and recovery from partial applies.
+
+**CLI-only (fish)?** Use **[Project B CLI runbook](./project-b-cli-runbook.md)** — no Azure Portal steps after `az login`.
 
 ## 1. Prerequisites and tooling
 
@@ -315,19 +317,39 @@ Share: `databricks_workspace_url`, `catalog_name`, `landing_external_location`, 
 
 Use when `make apply-b` failed **after** creating storage, workspace, or catalog but **before** groups, grants, or SQL warehouse succeeded. Full walkthrough: [deployment Stage 5R](./project-b-deployment-stages.md#stage-5r--recover-from-failed-engineer-apply).
 
+**CLI-first (recommended):** [Project B CLI runbook — Phase 4](./project-b-cli-runbook.md#phase-4--recovery-failed-partial-apply) or:
+
+```fish
+bash scripts/project-b-recover-engineer.sh alex
+bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # if SQL warehouse stuck
+```
+
 **Do not delete** the `sar-<id>` workspace or resource group unless you intend a full reprovision ([§5.2](#52-tear-down-one-engineer-stack)).
 
 1. **Ensure latest code** — engineer module requires account-level groups and `databricks_account_id` in engineer tfvars.
 2. **Engineer tfvars** — [`terraform/project-b-azure-engineer/terraform.tfvars`](../../terraform/project-b-azure-engineer/terraform.tfvars) must include `databricks_account_id` (same as shared).
-3. **Delete workspace-local groups only** (if present): in the **`sar-<id>` workspace** → **Administration** → **Groups** → remove `sar-<id>-data-engineers`, `-analysts`, `-report-authors`. Do not delete account-level groups unless re-apply reports duplicates.
-4. **Optional:** delete stuck SQL warehouse `sar-<id>-sql` in workspace → **SQL**.
+3. **Delete workspace-local groups only** (if present) — via Databricks CLI, not portal:
+   ```fish
+   set WS_URL (az databricks workspace show -g sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
+   set -x DATABRICKS_HOST "https://$WS_URL"
+   set -x DATABRICKS_AUTH_TYPE azure-cli
+   databricks groups-v2 list -o json | jq '.[] | {id, displayName}'
+   # Delete stale workspace-local groups named sar-<id>-data-engineers, -analysts, -report-authors
+   # Or use: bash scripts/project-b-recover-engineer.sh <id>
+   ```
+   Do **not** delete account-level groups unless re-apply reports duplicates.
+4. **Optional:** delete stuck SQL warehouse `sar-<id>-sql`:
+   ```fish
+   databricks warehouses list -o json | jq '.[] | select(.name=="sar-alex-sql")'
+   # databricks warehouses delete <id>
+   ```
 5. **Re-run:**
-   ```bash
-   make b-shared-env
+   ```fish
+   make b-shared-env-fish | source
    make apply-b ENGINEER=alex \
-     METASTORE_ID="$METASTORE_ID" \
-     ACCESS_CONNECTOR_ID="$ACCESS_CONNECTOR_ID" \
-     ACCESS_CONNECTOR_PRINCIPAL_ID="$ACCESS_CONNECTOR_PRINCIPAL_ID"
+     METASTORE_ID=$METASTORE_ID \
+     ACCESS_CONNECTOR_ID=$ACCESS_CONNECTOR_ID \
+     ACCESS_CONNECTOR_PRINCIPAL_ID=$ACCESS_CONNECTOR_PRINCIPAL_ID
    ```
 6. If grants fail with *Could not find principal*, wait 60 seconds and retry once.
 
@@ -557,14 +579,15 @@ Where to click for common admin tasks (Azure and Databricks UI labels change occ
 | **Databricks account ID** | Account console → username menu (top right) → **Account ID** |
 | **Metastore ID** | Account console → **Catalog** → click metastore → UUID in URL between `/data/` and `/configurations` |
 | **Add junior to data-engineers group** | Account console → **User management** → **`sar-<id>-data-engineers`** → Add user |
-| **Workspace-local groups** (delete on recovery) | Workspace UI → **Administration** → **Groups** |
-| **SQL warehouse** | Workspace UI → **SQL** → **SQL warehouses** |
+| **Workspace-local groups** (delete on recovery) | CLI: `bash scripts/project-b-recover-engineer.sh <id>` — or workspace Settings → Identity and access → Groups → Manage |
+| **SQL warehouse** | CLI: `databricks warehouses list` / `delete <id>` — or sidebar **SQL Warehouses** → kebab → Delete |
 | **Launch engineer workspace** | Azure Portal → resource group `sar-<id>` → Databricks workspace → **Launch workspace** |
 | **Unity Catalog catalog** | Workspace UI → **Catalog** → `sar_sandbox_<id>` |
 | **Enterprise applications** (optional) | Entra ID → **Enterprise applications** — often empty on fresh tenants; ignore if account console works |
 
 ## 9. Related docs
 
+- **[Project B CLI runbook](./project-b-cli-runbook.md)** — CLI-only deploy (fish)
 - **[Project B deployment stages](./project-b-deployment-stages.md)** — first-time deploy navigation
 
 - [Personal Azure account — Databricks setup](./personal-azure-databricks-setup.md) — MSA / Outlook signup and account console access

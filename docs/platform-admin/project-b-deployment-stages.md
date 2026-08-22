@@ -2,6 +2,8 @@
 
 **Start here** for a first-time Project B (Azure / Databricks) deploy. This guide is stage-based: find the stage that matches where you are, complete it, then move on.
 
+**Prefer CLI only (fish)?** Use the **[Project B CLI runbook](./project-b-cli-runbook.md)** instead — same stages, no portal navigation.
+
 For day-2 maintenance and deep reference, see the [Project B (Azure) runbook](./project-b-azure-runbook.md).
 
 ---
@@ -240,34 +242,53 @@ make apply-b ENGINEER=alex \
 
 **Do not delete** the `sar-<id>` workspace or resource group unless you intend a full reprovision.
 
+**CLI-first:** run from repo root (fish or bash):
+
+```fish
+bash scripts/project-b-recover-engineer.sh alex
+bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # optional
+```
+
+Full detail: [Project B CLI runbook — Phase 4](./project-b-cli-runbook.md#phase-4--recovery-failed-partial-apply).
+
 ### Checklist
 
 1. **Pull latest repo** — account-level groups fix and engineer `databricks_account_id` are required.
 
-2. **Engineer tfvars** — confirm [`terraform/project-b-azure-engineer/terraform.tfvars`](../../terraform/project-b-azure-engineer/terraform.tfvars) includes `databricks_account_id` (same UUID as shared).
+2. **Preflight** — `bash scripts/project-b-auth-check.sh`
 
-3. **Delete workspace-local groups only** (if they exist from the failed run):  
-   In the **`sar-<id>` workspace** → **Administration** → **Groups** → delete:
-   - `sar-<id>-data-engineers`
-   - `sar-<id>-analysts`
-   - `sar-<id>-report-authors`  
-   Do **not** delete account-level groups in the account console unless re-apply reports duplicate names.
+3. **Engineer tfvars** — confirm [`terraform/project-b-azure-engineer/terraform.tfvars`](../../terraform/project-b-azure-engineer/terraform.tfvars) includes `databricks_account_id` (same UUID as shared).
 
-4. **Optional:** delete stuck SQL warehouse `sar-<id>-sql` in workspace → **SQL** if re-apply errors on warehouse.
+4. **Delete workspace-local groups only** (if they exist from the failed run) — Databricks CLI, not portal:
+   ```fish
+   set WS_URL (az databricks workspace show -g sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
+   set -x DATABRICKS_HOST "https://$WS_URL"
+   set -x DATABRICKS_AUTH_TYPE azure-cli
+   for name in sar-alex-data-engineers sar-alex-analysts sar-alex-report-authors
+     set ID (databricks groups-v2 list -o json | jq -r ".[] | select(.displayName==\"$name\") | .id")
+     if test -n "$ID" -a "$ID" != "null"
+       databricks groups-v2 delete $ID; or true
+     end
+   end
+   ```
+   Do **not** delete account-level groups unless re-apply reports duplicate names.
 
-5. **Re-run apply:**
-
-   ```bash
-   az login --tenant "<tenant-id>"
-   az account set --subscription "<subscription-id>"
-   make b-shared-env
-   make apply-b ENGINEER=alex \
-     METASTORE_ID="$METASTORE_ID" \
-     ACCESS_CONNECTOR_ID="$ACCESS_CONNECTOR_ID" \
-     ACCESS_CONNECTOR_PRINCIPAL_ID="$ACCESS_CONNECTOR_PRINCIPAL_ID"
+5. **Optional:** delete stuck SQL warehouse `sar-<id>-sql`:
+   ```fish
+   databricks warehouses list -o json | jq '.[] | select(.name=="sar-alex-sql")'
+   # databricks warehouses delete <id>
    ```
 
-6. If grants fail with *Could not find principal*, wait 60 seconds and retry once.
+6. **Re-run apply:**
+   ```fish
+   make b-shared-env-fish | source
+   make apply-b ENGINEER=alex \
+     METASTORE_ID=$METASTORE_ID \
+     ACCESS_CONNECTOR_ID=$ACCESS_CONNECTOR_ID \
+     ACCESS_CONNECTOR_PRINCIPAL_ID=$ACCESS_CONNECTOR_PRINCIPAL_ID
+   ```
+
+7. If grants fail with *Could not find principal*, wait 60 seconds and retry once.
 
 **When to destroy instead:** only if you want a completely clean slate → [runbook §5.2](./project-b-azure-runbook.md#52-tear-down-one-engineer-stack) then re-run Stage 5.
 
