@@ -1,6 +1,6 @@
-# Project A — C4 modelling skeleton
+# Project A — C4 modelling skeleton (mentor copy)
 
-Complete these diagrams before / alongside each phase. Prefer Structurizr DSL, draw.io, or Mermaid.
+Same tasks as the junior copy in [`docs/developer/project-a/c4-skeleton.md`](../../developer/project-a/c4-skeleton.md), with the target diagrams linked for review. Do not hand this version to the engineer before they draft their own diagrams.
 
 **Mentor / target references (end-state):**
 
@@ -54,4 +54,4 @@ Sketch modules/classes inside the Lambda components (handler, routes, validation
 
 ## Deliverable
 
-Work the phases in [SAR request exercises](./sar_request_exercises.md). Submit Context + Container diagrams after Phase 1, an updated Component diagram after Phase 2, and optionally a Code sketch when your mentor asks for implementation detail.
+Work the phases in [SAR request exercises](../../developer/project-a/exercises/phased-exercises.md). Submit Context + Container diagrams after Phase 1, an updated Component diagram after Phase 2, and optionally a Code sketch when your mentor asks for implementation detail.

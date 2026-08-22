@@ -1,6 +1,6 @@
 # Mentor deploy notes
 
-Full steps: **[Platform administrator runbook](../platform-admin/runbook.md)**  
+Full steps: **[Project A (AWS)](../platform-admin/project-a-aws-runbook.md)** · **[Project B (Azure)](../platform-admin/project-b-azure-runbook.md)**  
 Projects are **independent** — run only the track the engineer needs.
 
 ## Project A only (AWS)
@@ -17,4 +17,4 @@ Projects are **independent** — run only the track the engineer needs.
 3. Set `databricks_account_id` in shared `terraform.tfvars` → `make apply-b-shared`
 4. `make apply-b ENGINEER=<id> METASTORE_ID=... ACCESS_CONNECTOR_ID=... ACCESS_CONNECTOR_PRINCIPAL_ID=...`
 5. Add user to Databricks `sar-<id>-data-engineers`
-6. Power BI licences remain manual — [power-bi.md](../project-b/power-bi.md)
+6. Power BI licences remain manual — [power-bi.md](../developer/project-b/power-bi.md)
