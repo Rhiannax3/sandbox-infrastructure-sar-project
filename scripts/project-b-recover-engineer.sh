@@ -130,6 +130,7 @@ databricks groups-v2 list -o json | jq '.[] | {id, displayName}' || true
 
 echo
 echo "==> Delete workspace-local stale groups (if present)"
+echo "    (required if permission_assignment failed with 'Workspace group ... already exists')"
 for name in "${GROUPS[@]}"; do
   id="$(databricks groups-v2 list -o json | jq -r --arg n "$name" '.[] | select(.displayName==$n) | .id' | head -1)"
   if [[ -n "$id" && "$id" != "null" ]]; then

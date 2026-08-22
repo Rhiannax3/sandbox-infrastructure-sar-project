@@ -118,6 +118,9 @@ resource "databricks_sql_endpoint" "warehouse" {
   auto_stop_mins            = var.sql_warehouse_auto_stop_mins
   enable_serverless_compute = false
   warehouse_type            = "PRO"
+  # Personal/trial subs often hit "Cluster Start-up Delayed" — create the warehouse
+  # without waiting for RUNNING; it starts on first SQL query.
+  no_wait = true
 
   tags {
     custom_tags {
