@@ -7,8 +7,9 @@ terraform {
       version = ">= 5.0"
     }
     databricks = {
-      source  = "databricks/databricks"
-      version = ">= 1.124"
+      source                = "databricks/databricks"
+      version               = ">= 1.124"
+      configuration_aliases = [databricks.accounts]
     }
   }
 }

@@ -29,6 +29,18 @@ provider "azurerm" {
   features {}
 }
 
+variable "databricks_account_id" {
+  type        = string
+  description = "Azure Databricks account ID (same value as project-b-azure-shared tfvars)"
+}
+
+provider "databricks" {
+  alias      = "accounts"
+  host       = "https://accounts.azuredatabricks.net"
+  account_id = var.databricks_account_id
+  auth_type  = "azure-cli"
+}
+
 # Workspace-level Databricks provider (after workspace exists)
 provider "databricks" {
   host                        = "https://${module.workspace.workspace_url}"
@@ -160,6 +172,11 @@ module "workspace" {
 
 module "workspace_config" {
   source = "../modules/databricks-workspace-config"
+
+  providers = {
+    databricks          = databricks
+    databricks.accounts = databricks.accounts
+  }
 
   name_prefix                   = local.name_prefix
   engineer_id                   = var.engineer_id

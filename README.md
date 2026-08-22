@@ -45,7 +45,7 @@ Shared: Terraform `>= 1.9`, `make` — install steps are repeated in each admin 
 | Track | Also install |
 |-------|----------------|
 | **AWS / Project A** | AWS CLI v2 (Docker runs on the EC2 host, not locally) — [Project A admin runbook §1.2](docs/platform-admin/project-a-aws-runbook.md#12-aws-tooling) |
-| **Azure / Project B** | Azure CLI + Databricks account admin — [Project B admin runbook §1.2](docs/platform-admin/project-b-azure-runbook.md#12-azure-tooling) |
+| **Azure / Project B** | Azure CLI + Databricks account admin — [Project B admin runbook §1.2](docs/platform-admin/project-b-azure-runbook.md#12-azure-tooling). Personal `@outlook.com` signup: [Databricks setup guide](docs/platform-admin/personal-azure-databricks-setup.md) first. |
 
 ## Quick start
 
@@ -62,7 +62,8 @@ make apply-a ENGINEER=alex
 ### Project B only (Azure)
 
 ```bash
-az login && az account show
+az login && az account set --subscription "<subscription-id-or-name>"
+# New subscription? Register providers first — see Project B admin runbook §1.3
 make bootstrap-azure
 # → uncomment azurerm backends; set databricks_account_id in shared tfvars
 make apply-b-shared

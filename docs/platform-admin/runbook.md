@@ -39,13 +39,14 @@ Both runbooks assume Terraform `>= 1.9` and `make`, and both repeat the install 
 
 | Step | What happens |
 |------|--------------|
-| Tooling and credentials | Terraform, Azure CLI, `az login`; **Databricks account admin** for the shared stack |
+| Tooling and credentials | Terraform, Azure CLI (`pacman` on Arch/CachyOS), `az login`; **Databricks account admin** for the shared stack — [personal MSA signup guide](./personal-azure-databricks-setup.md) if needed |
+| **New subscription** | Register `Microsoft.Storage`, `Microsoft.Databricks`, and related providers — [§1.3](./project-b-azure-runbook.md#13-new-azure-subscriptions) — before bootstrap |
 | Bootstrap | `make bootstrap-azure` creates the state storage account, then you uncomment the azurerm backends |
 | Shared apply | `make apply-b-shared` — set `databricks_account_id`; record `metastore_id` and access connector values |
 | Engineer apply | `make apply-b ENGINEER=<id> METASTORE_ID=… ACCESS_CONNECTOR_*=…` |
 | Handoff | Add the junior to `sar-<id>-data-engineers`; share workspace URL, catalog, external location, SQL warehouse JDBC URL |
 
-**Recurring admin tasks:** regenerate seed data with `make seed-data`, destroy individual engineer stacks, and leave the shared metastore alone while workspaces are still assigned. Power BI licences remain a manual step.
+**Recurring admin tasks:** regenerate seed data and refresh landing ([§4.1](./project-b-azure-runbook.md#41-regenerate-seed-data-and-refresh-landing-storage)), add or remove engineer sandboxes ([§5 Engineer sandbox lifecycle](./project-b-azure-runbook.md#5-engineer-sandbox-lifecycle)), leave the shared metastore in place while workspaces exist ([§4.2](./project-b-azure-runbook.md#42-shared-metastore-and-shared-stack-lifecycle)). Power BI licences remain a manual step.
 
 ## Related docs
 
