@@ -14,6 +14,7 @@ REQUIRED_PROVIDERS=(
   Microsoft.Authorization
   Microsoft.Consumption
   Microsoft.Resources
+  Microsoft.EventGrid
 )
 
 fail=0

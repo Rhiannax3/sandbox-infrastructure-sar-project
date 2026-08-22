@@ -83,8 +83,13 @@ variable "monthly_budget_gbp" {
 }
 
 variable "budget_alert_email" {
-  type    = string
-  default = ""
+  type        = string
+  description = "Required contact email for the engineer resource-group budget alert (Phase 6 cost guardrail)."
+
+  validation {
+    condition     = length(trimspace(var.budget_alert_email)) > 0
+    error_message = "budget_alert_email must be a non-empty email address so the engineer budget alert is always enabled."
+  }
 }
 
 variable "seed_data_path" {
@@ -150,6 +155,42 @@ resource "azurerm_storage_container" "checkpoints" {
   container_access_type = "private"
 }
 
+# Queue + Event Grid for Auto Loader file-notification (push) ingestion — Phase 6.
+# Filtered to landing/incoming so seed uploads under raw/ do not generate noise.
+resource "azurerm_storage_queue" "autoloader_notifications" {
+  name               = "autoloader-notifications"
+  storage_account_id = azurerm_storage_account.lake.id
+}
+
+resource "azurerm_role_assignment" "access_connector_queue" {
+  scope                = azurerm_storage_account.lake.id
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = var.access_connector_principal_id
+}
+
+resource "azurerm_eventgrid_event_subscription" "landing_incoming" {
+  name  = "${local.name_prefix}-landing-incoming"
+  scope = azurerm_storage_account.lake.id
+
+  storage_queue_endpoint {
+    storage_account_id = azurerm_storage_account.lake.id
+    queue_name         = azurerm_storage_queue.autoloader_notifications.name
+  }
+
+  included_event_types = [
+    "Microsoft.Storage.BlobCreated",
+  ]
+
+  subject_filter {
+    subject_begins_with = "/blobServices/default/containers/${azurerm_storage_container.landing.name}/blobs/incoming/"
+  }
+
+  depends_on = [
+    azurerm_storage_queue.autoloader_notifications,
+    azurerm_role_assignment.access_connector_queue,
+  ]
+}
+
 # Upload committed seed data into the landing container
 resource "azurerm_storage_blob" "seed" {
   for_each = fileset(var.seed_data_path, "**/*")
@@ -188,13 +229,12 @@ module "workspace_config" {
   storage_account_id            = azurerm_storage_account.lake.id
   landing_container_name        = azurerm_storage_container.landing.name
   external_container_name       = azurerm_storage_container.external.name
+  checkpoints_container_name    = azurerm_storage_container.checkpoints.name
 
   depends_on = [module.workspace, azurerm_storage_blob.seed]
 }
 
 resource "azurerm_consumption_budget_resource_group" "engineer" {
-  count = var.budget_alert_email != "" ? 1 : 0
-
   name              = "${local.name_prefix}-monthly"
   resource_group_id = module.foundation.resource_group_id
   amount            = var.monthly_budget_gbp
@@ -208,6 +248,14 @@ resource "azurerm_consumption_budget_resource_group" "engineer" {
     enabled        = true
     threshold      = 80
     operator       = "GreaterThan"
+    contact_emails = [var.budget_alert_email]
+  }
+
+  notification {
+    enabled        = true
+    threshold      = 100
+    operator       = "GreaterThan"
+    threshold_type = "Forecasted"
     contact_emails = [var.budget_alert_email]
   }
 
@@ -246,6 +294,22 @@ output "sql_warehouse_jdbc_url" {
 
 output "landing_external_location" {
   value = module.workspace_config.landing_external_location
+}
+
+output "external_external_location" {
+  value = module.workspace_config.external_external_location
+}
+
+output "checkpoints_external_location" {
+  value = module.workspace_config.checkpoints_external_location
+}
+
+output "autoloader_notification_queue_name" {
+  value = azurerm_storage_queue.autoloader_notifications.name
+}
+
+output "autoloader_notification_queue_storage_account" {
+  value = azurerm_storage_account.lake.name
 }
 
 output "group_data_engineers" {

@@ -17,7 +17,7 @@ SHELL := /bin/bash
 .PHONY: help bootstrap-aws bootstrap-azure \
 	init-a plan-a apply-a destroy-a \
 	init-b-shared apply-b-shared b-shared-env b-shared-env-fish \
-	init-b plan-b apply-b destroy-b \
+	init-b plan-b apply-b destroy-b b-notebooks \
 	fmt validate seed-data stage-app lint
 
 TF_B_ENGINEER_TFVARS := $(TF_B)/terraform.tfvars
@@ -44,6 +44,7 @@ help:
 	@echo "  make b-shared-env-fish     Print set -x METASTORE_ID=... (fish)"
 	@echo "  make plan-b ENGINEER=alex"
 	@echo "  make apply-b ENGINEER=alex"
+	@echo "  make b-notebooks ENGINEER=alex   Import starter notebooks to /Shared/sar-<id>/notebooks"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make fmt | validate | lint | seed-data | stage-app"
@@ -160,6 +161,11 @@ check-b-engineer-tfvars:
 	@if grep -qE 'REPLACE_DATABRICKS_ACCOUNT_ID|00000000-0000-0000-0000-000000000000' "$(TF_B_ENGINEER_TFVARS)"; then \
 	  echo "Set a real databricks_account_id in $(TF_B_ENGINEER_TFVARS) (not placeholder)" >&2; exit 1; \
 	fi
+	@grep -qE '^budget_alert_email[[:space:]]*=' "$(TF_B_ENGINEER_TFVARS)" || \
+	  (echo "$(TF_B_ENGINEER_TFVARS) must set budget_alert_email (required cost guardrail)" >&2; exit 1)
+	@if grep -qE 'REPLACE_BUDGET_ALERT_EMAIL|^budget_alert_email[[:space:]]*=[[:space:]]*""' "$(TF_B_ENGINEER_TFVARS)"; then \
+	  echo "Set a real budget_alert_email in $(TF_B_ENGINEER_TFVARS) (not placeholder/empty)" >&2; exit 1; \
+	fi
 
 init-b:
 	cd $(TF_B) && terraform init
@@ -224,6 +230,22 @@ lint:
 
 seed-data:
 	python3 seed-data/generator/generate.py --out seed-data/out --seed 42
+
+# Import Project B starter notebooks into the Databricks workspace (azure-cli auth).
+# Requires: DATABRICKS_HOST set (or resolved from terraform output) and databricks CLI.
+b-notebooks:
+	@command -v databricks >/dev/null || (echo "databricks CLI required" >&2; exit 1)
+	@WS_URL="$${DATABRICKS_HOST:-}"; \
+	if [[ -z "$$WS_URL" ]]; then \
+	  WS_URL="$$(cd $(TF_B) && terraform workspace select $(ENGINEER) >/dev/null 2>&1; terraform output -raw databricks_workspace_url 2>/dev/null || true)"; \
+	fi; \
+	if [[ -z "$$WS_URL" ]]; then echo "Set DATABRICKS_HOST or run apply-b first" >&2; exit 1; fi; \
+	export DATABRICKS_HOST="$${WS_URL}"; \
+	export DATABRICKS_AUTH_TYPE="$${DATABRICKS_AUTH_TYPE:-azure-cli}"; \
+	DEST="/Shared/sar-$(ENGINEER)/notebooks"; \
+	echo "Importing notebooks to $${DEST} (host=$${DATABRICKS_HOST})"; \
+	databricks workspace mkdirs "$${DEST}"; \
+	databricks workspace import-dir project-deployments/project-b/notebooks "$${DEST}" --overwrite
 
 # Optional manual stage (Terraform also stages via data.external during plan/apply)
 stage-app:

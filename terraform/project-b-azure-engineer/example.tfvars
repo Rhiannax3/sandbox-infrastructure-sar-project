@@ -12,9 +12,7 @@
 #   metastore_id                  = "<from: make b-shared-env>"
 #   access_connector_id           = "<from: make b-shared-env>"
 #   access_connector_principal_id = "<from: make b-shared-env>"
-#
-# Optional:
-#   budget_alert_email = "mentor@example.com"
+#   budget_alert_email            = "mentor@example.com"   # REQUIRED (cost guardrail)
 
 engineer_id = "demo"
 location    = "uksouth"
@@ -24,3 +22,4 @@ databricks_account_id = "REPLACE_DATABRICKS_ACCOUNT_ID"
 metastore_id                  = "REPLACE_METASTORE_ID"
 access_connector_id           = "REPLACE_ACCESS_CONNECTOR_ID"
 access_connector_principal_id = "REPLACE_PRINCIPAL_ID"
+budget_alert_email            = "REPLACE_BUDGET_ALERT_EMAIL"
