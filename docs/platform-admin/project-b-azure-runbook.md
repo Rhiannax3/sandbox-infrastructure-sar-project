@@ -330,7 +330,7 @@ bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # if SQL wa
 2. **Engineer tfvars** — [`terraform/project-b-azure-engineer/terraform.tfvars`](../../terraform/project-b-azure-engineer/terraform.tfvars) must include `databricks_account_id` (same as shared).
 3. **Delete workspace-local groups only** (if present) — via Databricks CLI, not portal:
    ```fish
-   set WS_URL (az databricks workspace show -g sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
+   set WS_URL (az databricks workspace show -g rg-sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
    set -x DATABRICKS_HOST "https://$WS_URL"
    set -x DATABRICKS_AUTH_TYPE azure-cli
    databricks groups-v2 list -o json | jq '.[] | {id, displayName}'
@@ -429,8 +429,8 @@ cd terraform/project-b-azure-engineer && terraform workspace select alex && terr
 cd terraform/project-b-azure-shared && terraform output
 
 # Azure: confirm RG and workspace exist
-az group show -n sar-alex -o table
-az databricks workspace list -g sar-alex -o table
+az group show -n rg-sar-alex -o table
+az databricks workspace list -g rg-sar-alex -o table
 ```
 
 **Smoke test after apply or handoff:**
@@ -581,7 +581,7 @@ Where to click for common admin tasks (Azure and Databricks UI labels change occ
 | **Add junior to data-engineers group** | Account console → **User management** → **`sar-<id>-data-engineers`** → Add user |
 | **Workspace-local groups** (delete on recovery) | CLI: `bash scripts/project-b-recover-engineer.sh <id>` — or workspace Settings → Identity and access → Groups → Manage |
 | **SQL warehouse** | CLI: `databricks warehouses list` / `delete <id>` — or sidebar **SQL Warehouses** → kebab → Delete |
-| **Launch engineer workspace** | Azure Portal → resource group `sar-<id>` → Databricks workspace → **Launch workspace** |
+| **Launch engineer workspace** | Azure Portal → resource group `rg-sar-<id>` → Databricks workspace → **Launch workspace** |
 | **Unity Catalog catalog** | Workspace UI → **Catalog** → `sar_sandbox_<id>` |
 | **Enterprise applications** (optional) | Entra ID → **Enterprise applications** — often empty on fresh tenants; ignore if account console works |
 

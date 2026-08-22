@@ -261,7 +261,7 @@ Full detail: [Project B CLI runbook — Phase 4](./project-b-cli-runbook.md#phas
 
 4. **Delete workspace-local groups only** (if they exist from the failed run) — Databricks CLI, not portal:
    ```fish
-   set WS_URL (az databricks workspace show -g sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
+   set WS_URL (az databricks workspace show -g rg-sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
    set -x DATABRICKS_HOST "https://$WS_URL"
    set -x DATABRICKS_AUTH_TYPE azure-cli
    for name in sar-alex-data-engineers sar-alex-analysts sar-alex-report-authors

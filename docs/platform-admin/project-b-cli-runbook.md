@@ -212,7 +212,7 @@ bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # if SQL wa
 Workspace admin settings path in UI is **Settings → Identity and access → Groups → Manage** — but use CLI instead:
 
 ```fish
-set WS_URL (az databricks workspace show -g sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
+set WS_URL (az databricks workspace show -g rg-sar-alex -n dbw-sar-alex --query workspaceUrl -o tsv)
 set -x DATABRICKS_HOST "https://$WS_URL"
 set -x DATABRICKS_AUTH_TYPE azure-cli
 
@@ -241,7 +241,7 @@ Delete **workspace-local** groups only. Do **not** delete account-level groups u
 Workspace URL:
 
 ```fish
-az databricks workspace show -g sar-alex -n dbw-sar-alex \
+az databricks workspace show -g rg-sar-alex -n dbw-sar-alex \
   --query workspaceUrl -o tsv
 ```
 
