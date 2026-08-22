@@ -242,11 +242,10 @@ make apply-b ENGINEER=alex \
 
 **Do not delete** the `sar-<id>` workspace or resource group unless you intend a full reprovision.
 
-**CLI-first:** run from repo root (fish or bash):
+**CLI-first:** run from repo root (fish or bash). **Pull latest** — a bash `GROUPS` variable bug in older delete scripts caused no-op cleanup (output showed `--- 1000 ---` instead of persona group names).
 
 ```fish
-# Groups must be cleared first (--delete-warehouse does NOT remove groups)
-bash scripts/project-b-delete-workspace-local-groups.sh alex
+git pull
 bash scripts/project-b-recover-engineer.sh alex
 # optional stuck warehouse only:
 bash scripts/project-b-recover-engineer.sh alex --delete-warehouse

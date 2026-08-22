@@ -126,22 +126,7 @@ bash "${ROOT}/scripts/project-b-delete-workspace-local-groups.sh" "$ENGINEER"
 
 echo
 echo "==> Import existing permission assignments (if account groups already assigned)"
-if (cd "$TF_ENGINEER" && terraform init -input=false >/dev/null 2>&1); then
-  (cd "$TF_ENGINEER" && terraform workspace select "$ENGINEER" >/dev/null 2>&1) || true
-  for role in data_engineers analysts report_authors; do
-    pid="$(cd "$TF_ENGINEER" && terraform state show -no-color "module.workspace_config.databricks_group.${role}" 2>/dev/null \
-      | awk '/^id / { gsub(/"/, "", $3); print $3; exit }' || true)"
-    if [[ -n "$pid" ]]; then
-      if (cd "$TF_ENGINEER" && terraform state show "module.workspace_config.databricks_permission_assignment.${role}" >/dev/null 2>&1); then
-        echo "    ${role}: already in state"
-      else
-        echo "    ${role}: importing permission_assignment principal ${pid}"
-        (cd "$TF_ENGINEER" && terraform import "module.workspace_config.databricks_permission_assignment.${role}" "$pid") \
-          || echo "    WARN: import failed for ${role} (will retry on apply)"
-      fi
-    fi
-  done
-fi
+bash "${ROOT}/scripts/project-b-import-permission-assignments.sh" "$ENGINEER" || true
 
 if [[ "$DELETE_WAREHOUSE" -eq 1 ]]; then
   echo

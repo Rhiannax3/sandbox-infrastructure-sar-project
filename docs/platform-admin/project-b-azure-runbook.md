@@ -545,7 +545,7 @@ Log is written to `records/project-b-alex.destroy.log`.
 | `databricks_account_id` unknown or wrong | Account console username menu — **not** subscription ID; see [personal account guide](./personal-azure-databricks-setup.md) |
 | `Could not find principal` on `databricks_grants` | Unity Catalog needs **account-level** groups — pull latest module fix; delete any workspace-local groups with the same names in the workspace admin UI, then re-run `apply-b` |
 | SQL warehouse create timeout / *Cluster Start-up Delayed* | Module uses `min_num_clusters = 0` and `no_wait = true` — warehouse is created stopped; first query starts it. Re-run `apply-b` after deleting workspace-local groups (see below). |
-| *Workspace group with name sar-\<id\>-* already exists* on permission_assignment | Leftover **workspace-local** groups from failed apply — run `bash scripts/project-b-delete-workspace-local-groups.sh <id>` then re-apply (not fixed by `--delete-warehouse`) |
+| *Workspace group with name sar-\<id\>-* already exists* on permission_assignment | Leftover **workspace-local** groups from failed apply — `git pull`, then `bash scripts/project-b-recover-engineer.sh <id>` (delete script must show `sar-<id>-data-engineers`, not numeric GIDs like `1000`) |
 
 ## 8. Checklist
 

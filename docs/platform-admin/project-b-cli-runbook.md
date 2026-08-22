@@ -203,13 +203,30 @@ make apply-b ENGINEER=alex \
 
 ### One command (bash script from fish)
 
+**Pull latest first** — older delete scripts used bash variable `GROUPS` (readonly Unix GIDs), so output showed `--- 1000 ---` instead of `--- sar-alex-data-engineers ---` and skipped real cleanup.
+
+```fish
+git pull
+bash scripts/project-b-recover-engineer.sh alex
+# optional stuck warehouse only:
+bash scripts/project-b-recover-engineer.sh alex --delete-warehouse
+```
+
+Or step-by-step:
+
 ```fish
 bash scripts/project-b-delete-workspace-local-groups.sh alex
-bash scripts/project-b-recover-engineer.sh alex
-bash scripts/project-b-recover-engineer.sh alex --delete-warehouse   # SQL warehouse only
+bash scripts/project-b-import-permission-assignments.sh alex
+make b-shared-env-fish | source
+make apply-b ENGINEER=alex \
+  METASTORE_ID=$METASTORE_ID \
+  ACCESS_CONNECTOR_ID=$ACCESS_CONNECTOR_ID \
+  ACCESS_CONNECTOR_PRINCIPAL_ID=$ACCESS_CONNECTOR_PRINCIPAL_ID
 ```
 
 `--delete-warehouse` does **not** remove conflicting workspace-local groups.
+
+Expected delete-script output: `--- sar-alex-data-engineers ---` (not numeric GIDs like `--- 1000 ---`).
 
 ### Manual fish equivalent
 
@@ -266,6 +283,7 @@ Add junior to account group via Databricks account/workspace SCIM API (see [Micr
 |--------|---------|
 | [`scripts/project-b-auth-check.sh`](../../scripts/project-b-auth-check.sh) | Az login, RBAC, providers, tfvars, optional account API |
 | [`scripts/project-b-delete-workspace-local-groups.sh`](../../scripts/project-b-delete-workspace-local-groups.sh) | Remove legacy workspace-local groups blocking permission_assignment |
+| [`scripts/project-b-import-permission-assignments.sh`](../../scripts/project-b-import-permission-assignments.sh) | Import `permission_assignment` when account groups already exist in workspace |
 | [`scripts/project-b-recover-engineer.sh`](../../scripts/project-b-recover-engineer.sh) | Group cleanup + import + `make apply-b` |
 
 | Make target | Purpose |
