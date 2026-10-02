@@ -102,7 +102,7 @@ az account set --subscription "<subscription-id-or-name>"
 az account show --query "{name:name,id:id,tenant:tenantId,user:user.name}" -o table
 
 for ns in Microsoft.Storage Microsoft.Databricks Microsoft.Authorization \
-          Microsoft.Consumption Microsoft.Resources; do
+          Microsoft.Consumption Microsoft.Resources Microsoft.EventGrid; do
   echo "Registering $ns ..."
   az provider register --namespace "$ns"
 done

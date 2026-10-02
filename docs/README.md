@@ -10,9 +10,11 @@
 - [Project A — SAR request exercises (Phases 1–4)](developer/project-a/exercises/phased-exercises.md)
 - [Project A — C4 modelling skeleton](developer/project-a/c4-skeleton.md)
 - [Project B — Engineer runbook](developer/project-b/runbook.md)
+- **[Project B — Medallion exercises (Phases 1–6)](developer/project-b/exercises/README.md)**
 - [Project B — Business questions (Gold/Platinum)](developer/project-b/business-questions.md)
 - [Project B — Power BI connectivity](developer/project-b/power-bi.md)
 - [Mentor — Project A C4 target diagrams](mentor/c4-diagrams/c4-skeleton.md) (mentor only)
+- [Mentor — Project B facilitation & phase rubrics](mentor/project-b/README.md) (mentor only)
 - [Mentor — Seed data anomaly map](mentor/anomaly-map.md) (mentor only)
 - [Mentor — Deploy notes](mentor/deploy-notes.md)
 - [Architecture overview](architecture.md) — independent AWS / Azure sandboxes

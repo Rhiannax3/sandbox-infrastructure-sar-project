@@ -129,12 +129,12 @@ databricks account metastores list -o json
 
 ```fish
 for ns in Microsoft.Storage Microsoft.Databricks Microsoft.Authorization \
-          Microsoft.Consumption Microsoft.Resources
+          Microsoft.Consumption Microsoft.Resources Microsoft.EventGrid
   echo "Registering $ns ..."
   az provider register --namespace $ns
 end
 
-for ns in Microsoft.Storage Microsoft.Databricks
+for ns in Microsoft.Storage Microsoft.Databricks Microsoft.EventGrid
   az provider show --namespace $ns --query registrationState -o tsv
 end
 ```

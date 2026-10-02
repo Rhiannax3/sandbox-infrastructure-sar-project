@@ -1,0 +1,4 @@
+# Ruff config (pyproject.toml is gitignored in this repo).
+exclude = [
+    "project-deployments/project-b/notebooks",
+]

@@ -93,7 +93,8 @@ for ns in \
   Microsoft.Databricks \
   Microsoft.Authorization \
   Microsoft.Consumption \
-  Microsoft.Resources
+  Microsoft.Resources \
+  Microsoft.EventGrid
 do
   echo "Registering $ns ..."
   az provider register --namespace "$ns"
@@ -113,8 +114,9 @@ Registration typically takes **1–5 minutes**; on a brand-new subscription it c
 | `Microsoft.Storage` | Remote state account (bootstrap), ADLS Gen2 lake, metastore storage |
 | `Microsoft.Databricks` | Workspace and access connector |
 | `Microsoft.Authorization` | Role assignments (access connector → storage, landing external location) |
-| `Microsoft.Consumption` | Optional per–resource-group budget alerts |
+| `Microsoft.Consumption` | Per–resource-group budget alerts |
 | `Microsoft.Resources` | Resource groups (usually already registered) |
+| `Microsoft.EventGrid` | Auto Loader file-notification (push) path — Phase 6 |
 
 **Permissions:** registering providers requires `Microsoft.Resources/subscriptions/providers/register/action` — typically **Owner** or **Contributor** on the subscription. If `az provider register` returns authorization errors, ask a subscription admin to run the loop above or grant you Contributor on the subscription.
 
@@ -149,7 +151,7 @@ Copy each `example.tfvars` to `terraform.tfvars` in the same directory. Do **not
 | `location` | Yes | Default `uksouth` |
 | `create_metastore` | Yes | `true` for greenfield org tenant; **`false`** if bootstrap workspace already created metastore (personal MSA) |
 | `existing_metastore_id` | When adopting | Metastore UUID when `create_metastore = false` — [§3.1](#31-adopting-an-existing-metastore) |
-| `budget_alert_email` | No | Optional consumption budget alerts |
+| `budget_alert_email` | No | Optional consumption budget alerts for the shared RG |
 
 ### Engineer stack — `terraform/project-b-azure-engineer/terraform.tfvars`
 
@@ -161,7 +163,7 @@ Copy each `example.tfvars` to `terraform.tfvars` in the same directory. Do **not
 | `metastore_id` | Yes | From shared output (also pass as `METASTORE_ID` env to Make) |
 | `access_connector_id` | Yes | From shared output |
 | `access_connector_principal_id` | Yes | From shared output |
-| `budget_alert_email` | No | Optional per-engineer budget |
+| `budget_alert_email` | **Yes** | Required engineer RG budget (80% actual + 100% forecast) — Phase 6 cost guardrail |
 
 Makefile `-var` flags for `METASTORE_ID`, `ACCESS_CONNECTOR_ID`, and `ACCESS_CONNECTOR_PRINCIPAL_ID` **override** the same keys in engineer tfvars if both are set.
 
@@ -440,7 +442,7 @@ az databricks workspace list -g rg-sar-alex -o table
 3. **SQL** → warehouse from output is running (may auto-stop after idle — expected).
 4. Browse landing data: files under `raw/` reflect committed seed data.
 
-**Cost:** if `budget_alert_email` is set in shared or engineer tfvars, confirm alerts in Azure Cost Management; SQL warehouse and clusters still incur spend while running — the engineer runbook documents auto-stop on the warehouse and a cost-capped cluster policy.
+**Cost:** engineer stacks require `budget_alert_email` in tfvars (80% actual + 100% forecast). Confirm alerts in Azure Cost Management. SQL warehouse and clusters still incur spend while running — clusters must use the cost-capped policy; continuous streams bypass auto-termination (see Phase 6 exercises).
 
 ## 5. Engineer sandbox lifecycle
 

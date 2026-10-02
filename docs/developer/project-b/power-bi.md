@@ -28,5 +28,6 @@ Power BI **licences and workspaces are not provisioned by Terraform**. A mentor/
 |---------|--------------|
 | Login succeeds but no catalogs | Missing `USE_CATALOG` / group membership |
 | Tables missing | Gold/Platinum not built yet, or grants not applied (Phase 5) |
+| Cannot use SQL warehouse / permission denied | Group lacks `CAN_USE` on the warehouse — ask mentor to re-apply engineer Terraform |
 | Warehouse errors / timeouts | Warehouse auto-stopped — retry to wake it |
 | Licence prompt | Admin has not assigned Power BI licence |

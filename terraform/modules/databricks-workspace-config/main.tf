@@ -39,6 +39,11 @@ variable "external_container_name" {
   type = string
 }
 
+variable "checkpoints_container_name" {
+  type        = string
+  description = "ADLS container for Auto Loader / streaming checkpoints"
+}
+
 variable "sql_warehouse_auto_stop_mins" {
   type    = number
   default = 10
@@ -89,7 +94,19 @@ resource "databricks_external_location" "external" {
     var.storage_account_name
   )
   credential_name = databricks_storage_credential.this.id
-  comment         = "External / quarantine / checkpoint storage"
+  comment         = "External / quarantine / staging storage"
+  depends_on      = [databricks_storage_credential.this]
+}
+
+resource "databricks_external_location" "checkpoints" {
+  name = "${var.name_prefix}-checkpoints"
+  url = format(
+    "abfss://%s@%s.dfs.core.windows.net/",
+    var.checkpoints_container_name,
+    var.storage_account_name
+  )
+  credential_name = databricks_storage_credential.this.id
+  comment         = "Auto Loader and Structured Streaming checkpoints"
   depends_on      = [databricks_storage_credential.this]
 }
 
@@ -165,6 +182,44 @@ resource "databricks_cluster_policy" "cost_capped" {
   })
 }
 
+# Enforce the cost-capped policy: unrestricted allow_cluster_create is OFF;
+# CAN_USE on the policy still permits cluster creation within the policy.
+resource "databricks_permissions" "cluster_policy" {
+  cluster_policy_id = databricks_cluster_policy.cost_capped.id
+
+  access_control {
+    group_name       = databricks_group.data_engineers.display_name
+    permission_level = "CAN_USE"
+  }
+
+  depends_on = [databricks_permission_assignment.data_engineers]
+}
+
+resource "databricks_permissions" "sql_warehouse" {
+  sql_endpoint_id = databricks_sql_endpoint.warehouse.id
+
+  access_control {
+    group_name       = databricks_group.data_engineers.display_name
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.analysts.display_name
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.report_authors.display_name
+    permission_level = "CAN_USE"
+  }
+
+  depends_on = [
+    databricks_permission_assignment.data_engineers,
+    databricks_permission_assignment.analysts,
+    databricks_permission_assignment.report_authors,
+  ]
+}
+
 # Persona groups for Phase 5 RBAC exercises (grants left to engineers).
 # Unity Catalog grants require account-level groups, not workspace-local groups.
 resource "databricks_group" "data_engineers" {
@@ -205,7 +260,8 @@ resource "databricks_entitlements" "data_engineers" {
   group_id                   = databricks_group.data_engineers.id
   workspace_access           = true
   databricks_sql_access      = true
-  allow_cluster_create       = true
+  # Unrestricted cluster create bypasses the cost-capped policy — keep false.
+  allow_cluster_create       = false
   allow_instance_pool_create = false
 
   depends_on = [databricks_permission_assignment.data_engineers]
@@ -232,8 +288,22 @@ resource "databricks_grants" "catalog_engineers" {
   catalog = databricks_catalog.sandbox.name
 
   grant {
-    principal  = databricks_group.data_engineers.display_name
-    privileges = ["USE_CATALOG", "CREATE_SCHEMA", "USE_SCHEMA", "CREATE_TABLE", "SELECT", "MODIFY"]
+    principal = databricks_group.data_engineers.display_name
+    privileges = [
+      "USE_CATALOG",
+      "BROWSE",
+      "CREATE_SCHEMA",
+      "USE_SCHEMA",
+      "CREATE_TABLE",
+      "SELECT",
+      "MODIFY",
+      "CREATE_FUNCTION",
+      "EXECUTE",
+      "CREATE_VOLUME",
+      "READ_VOLUME",
+      "WRITE_VOLUME",
+      "APPLY_TAG",
+    ]
   }
 
   grant {
@@ -264,6 +334,28 @@ resource "databricks_grants" "landing_engineers" {
   depends_on = [databricks_permission_assignment.data_engineers]
 }
 
+resource "databricks_grants" "external_engineers" {
+  external_location = databricks_external_location.external.id
+
+  grant {
+    principal  = databricks_group.data_engineers.display_name
+    privileges = ["READ_FILES", "WRITE_FILES", "CREATE_EXTERNAL_TABLE"]
+  }
+
+  depends_on = [databricks_permission_assignment.data_engineers]
+}
+
+resource "databricks_grants" "checkpoints_engineers" {
+  external_location = databricks_external_location.checkpoints.id
+
+  grant {
+    principal  = databricks_group.data_engineers.display_name
+    privileges = ["READ_FILES", "WRITE_FILES"]
+  }
+
+  depends_on = [databricks_permission_assignment.data_engineers]
+}
+
 output "catalog_name" {
   value = databricks_catalog.sandbox.name
 }
@@ -278,6 +370,14 @@ output "sql_warehouse_jdbc_url" {
 
 output "landing_external_location" {
   value = databricks_external_location.landing.url
+}
+
+output "external_external_location" {
+  value = databricks_external_location.external.url
+}
+
+output "checkpoints_external_location" {
+  value = databricks_external_location.checkpoints.url
 }
 
 output "cluster_policy_id" {
